@@ -1,4 +1,4 @@
-package agh.ics.oop.Models;
+package agh.ics.oop.Models.Enums;
 
 public enum MoveDirection{
     FORWARD,
