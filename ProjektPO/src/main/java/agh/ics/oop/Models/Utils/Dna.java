@@ -20,6 +20,7 @@ public class Dna {
         this.value = value;
     }
 
+    //generowanie dna na początku
     private void generateDna(){
         for(int i =0;i<size;i++){
             value.add(getRandom(0,8));
@@ -33,8 +34,10 @@ public class Dna {
         return value.get(actual);
     }
 
+    //stworzenie Dna dziecka
     public List<Integer> multiplicationWith(Dna other,float percentageFromMe){
         List<Integer> list = new ArrayList<>();
+        //podział lewy czy prawy
         if (Math.random() < 0.5f ){
             list = getPartToMultiplication(percentageFromMe,true);
             list.addAll(other.getPartToMultiplication(1-percentageFromMe,false));
@@ -43,6 +46,7 @@ public class Dna {
             list.addAll(getPartToMultiplication(percentageFromMe,false));
         }
 
+        //MUTACJE
         int many = getRandom(0,list.size());  //TUTAJ TEŻ LEPSZE LOSOWANIE BEZ POWTÓRZEŃ ?
         for(int i=0;i<many;i++){
             int j = getRandom(0,list.size());
@@ -53,6 +57,7 @@ public class Dna {
         return list;
     }
 
+    //pobranie odpowiedniej części dna
     public List<Integer> getPartToMultiplication(float percentageFromMe,boolean isLeft){
         if(isLeft){
             return value.subList(0, Math.round(value.size()*percentageFromMe));

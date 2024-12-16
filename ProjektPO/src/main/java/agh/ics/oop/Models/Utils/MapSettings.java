@@ -7,5 +7,6 @@ public record MapSettings(
         int energyToAdult,
         int energyForMulti,
         int startGrassNumber,
-        int numberOfGrowing
+        int numberOfGrowing,
+        int startEnergy
 ){};

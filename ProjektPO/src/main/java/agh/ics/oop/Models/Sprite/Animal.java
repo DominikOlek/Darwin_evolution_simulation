@@ -13,9 +13,10 @@ public class Animal implements MapObject{
     private Dna dna;
     private int energy;
 
-    public Animal(Vector2D position,Dna dna){
+    public Animal(Vector2D position,Dna dna,int energy){
         this.position = position;
         this.dna = dna;
+        this.energy = energy;
     }
 
     public Vector2D getPosition() {
@@ -25,8 +26,10 @@ public class Animal implements MapObject{
         return direction;
     }
 
+    //cykl ruchu zwierzecia i przypisanie pozycji na podany z mapy
     public void move(Vector2D position){
         this.position = position;
+        nextDay();
     }
 
     public void eat(int energy){
@@ -37,8 +40,9 @@ public class Animal implements MapObject{
         this.direction = MapDirection.values()[(this.direction.ordinal()+number)%8];
     }
 
-    public void rotate(){ //Przejscie do kolejnego dnia
-        rotate(dna.getActual());
+    public void nextDay(){ //Przejscie do kolejnego dnia
+        rotate(dna.getActual()); // wykonanie obrotu na podstawie dna aktualnego
+        energy -= 1;
         dna.nextDay();
     }
     public void fullRotate(){
@@ -53,6 +57,12 @@ public class Animal implements MapObject{
         return energy;
     }
 
+    public void multiplicationLostEnergy(int energy) {
+        this.energy -= energy;
+    }
+
+
+    //Wymagane do hashset i treeset
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
