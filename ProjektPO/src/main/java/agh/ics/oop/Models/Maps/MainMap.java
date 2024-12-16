@@ -117,20 +117,25 @@ public class MainMap {
         }
     }
 
-    public void eatingAnimals() { // OD RAZU MAMY INFORMACJE O 2 NAJSILNIEJSZYCH LEPIEJ PRZENIEŚĆ DO OSOBNEJ
-        for(Map.Entry<Vector2D, Set<Animal>> set : animals.entrySet()) {
-            Set<Animal> values = set.getValue();
-            TreeSet<Animal> treeSet = new TreeSet<Animal>();
-            treeSet.addAll(values);
-            Animal oneAnimal = treeSet.getFirst();
-            treeSet.getFirst().eat(energyFromEat);
-            if(values.size()>1){
-                treeSet.removeAll(values);
-                Animal secondAnimal = treeSet.getFirst();
-
-            }
+    public void eating(){
+        for(Map.Entry<Vector2D, Grass> grass : grasses.entrySet()) {
+            eatingAnimals(grass.getKey());
         }
     }
+
+    public void eatingAnimals(Vector2D pos) { // OD RAZU MAMY INFORMACJE O 2 NAJSILNIEJSZYCH LEPIEJ PRZENIEŚĆ DO OSOBNEJ
+        Set<Animal> values = animals.get(pos);
+        TreeSet<Animal> treeSet = new TreeSet<Animal>();
+        treeSet.addAll(values);
+        Animal oneAnimal = treeSet.getFirst();
+        treeSet.getFirst().eat(energyFromEat);
+        if(values.size()>1){
+            treeSet.removeAll(values);
+            Animal secondAnimal = treeSet.getFirst();
+        }
+    }
+
+
 
     //AnimalsAt
     public Set<Animal> getAnimalsAt(Vector2D pos) {
