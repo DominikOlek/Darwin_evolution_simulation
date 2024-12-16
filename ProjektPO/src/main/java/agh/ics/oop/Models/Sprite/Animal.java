@@ -2,21 +2,27 @@ package agh.ics.oop.Models.Sprite;
 
 import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Utils.Dna;
+import agh.ics.oop.Models.Utils.GenerateID;
 import agh.ics.oop.Models.Utils.Vector2D;
 
 import java.util.List;
 import java.util.Objects;
+
+import static agh.ics.oop.Models.Utils.GenerateID.GetID;
 
 public class Animal implements MapObject{
     private Vector2D position;
     private MapDirection direction;
     private Dna dna;
     private int energy;
+    private int ID;
 
     public Animal(Vector2D position,Dna dna,int energy){
         this.position = position;
         this.dna = dna;
         this.energy = energy;
+        this.direction = MapDirection.NORTH;
+        this.ID = GetID();
     }
 
     public Vector2D getPosition() {
@@ -68,12 +74,12 @@ public class Animal implements MapObject{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Animal animal = (Animal) o;
-        return energy == animal.energy && Objects.equals(position, animal.position) && direction == animal.direction && Objects.equals(dna, animal.dna);
+        return ID == animal.ID;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(position, direction, dna, energy);
+        return Objects.hashCode(ID);
     }
 
     @Override
@@ -83,7 +89,18 @@ public class Animal implements MapObject{
         } else if (this.energy < o.energy) {
             return 1;
         } else {
-            return 0;
+            return 1;
         }
+    }
+
+
+    @Override
+    public String toString() {
+        return "Animal{" +
+                "position=" + position +
+                ", direction=" + direction +
+                ", dna=" + dna +
+                ", energy=" + energy +
+                '}';
     }
 }

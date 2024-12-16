@@ -3,10 +3,7 @@ package agh.ics.oop.Models.Maps;
 import agh.ics.oop.Models.Enums.MoveDirection;
 import agh.ics.oop.Models.Sprite.Animal;
 import agh.ics.oop.Models.Sprite.Grass;
-import agh.ics.oop.Models.Utils.Boundary;
-import agh.ics.oop.Models.Utils.Dna;
-import agh.ics.oop.Models.Utils.MapSettings;
-import agh.ics.oop.Models.Utils.Vector2D;
+import agh.ics.oop.Models.Utils.*;
 
 import java.util.*;
 
@@ -25,13 +22,14 @@ public class MainMap {
     private final int energyToAdult;
     private final int energyForMulti;
     private final int startEnergy;
+    private final int howMany;
 
     private Boundary size;
     private int equator;
     private int equatorHeight;
 
     //MapSettings - wszystkie opcje jakie będą ustawiane
-    public MainMap(Boundary size, MapSettings settings) {
+    public MainMap(Boundary size, MapSettings settings,int howManyAnimals) {
         this.startGrassNumber = settings.startGrassNumber();
         this.size = size;
         this.numberOfGrowing = settings.numberOfGrowing();
@@ -44,17 +42,28 @@ public class MainMap {
         this.energyToAdult = settings.energyToAdult();
         this.energyForMulti = settings.energyForMulti();
         this.startEnergy = settings.startEnergy();
+        this.howMany = howManyAnimals;
+        generateStartAnimal();
     }
     //wykonywane przez simulation co dnia, aktualnie cykl jedzenie i rozmnażania połączony
     public void doDay(){
         killsAnimals();
-        for(Map.Entry<Vector2D, Set<Animal>> animal : animals.entrySet()) {
-            for(Animal a : animal.getValue()) {
-                moveTo(a);
-            }
+        List<Animal> ll = getAllAnimals();
+        for (Animal anima : ll) { // !!!! BARDZO DUŻY PROBLEM TAKIEJ IMPLEMNTACJI NIESTETY ABY MÓC USUWAĆ I PRZYPISYWAĆ ZWIERZĄTA A HASHMAP I HASHSET POTRZEBA ZROBIĆ KOPIĘ DO ITEROWANIA, chociaż może udało by się zrobić iteratorami - pomyślę kiedyś
+            moveTo(anima);
         }
         cycleEatMulti();
     }
+
+    private void generateStartAnimal(){
+        RandomPositionGenerator rand = new RandomPositionGenerator(size.upperRight().getX(),size.upperRight().getY(),howMany);
+        Iterator<Vector2D> positions = rand.iterator();
+        while(positions.hasNext()){
+            Vector2D position = positions.next();
+            addAnimal(position,new Animal(position,new Dna(lenGen),startEnergy));
+        }
+    }
+
 
 
     //runDay
@@ -72,26 +81,33 @@ public class MainMap {
         return (size.lowerLeft().precedes(pos) && size.upperRight().follows(pos));
     }
 
+    public ArrayList<Animal> getAllAnimals() {
+        // Get animals sorted in a non-decreasing order
+        ArrayList<Animal> result = new ArrayList<>();
+        for (Set<Animal> animals: animals.values()) result.addAll(animals);
+        return result;
+    }
+
     //porusza zwierzakiem na podstawie jego obrotu
     public boolean moveTo(Animal animal) {
         Vector2D toPos = animal.getPosition().add(animal.getDirection().toUnitVector());
         boolean status = false;
-        if(!CanMoveTo(toPos)) {
+        if (!CanMoveTo(toPos)) {
             status = true;
-            if(toPos.getX()<0){
+            if (toPos.getX() < 0) {
                 toPos.setX(size.upperRight().getX());
-            }else if(toPos.getX()>size.upperRight().getX()){
+            } else if (toPos.getX() > size.upperRight().getX()) {
                 toPos.setX(0);
-            }else if(toPos.getY()<0){
+            } else if (toPos.getY() < 0) {
                 toPos.setY(0);
                 animal.fullRotate();
-            }else if(toPos.getY()>size.upperRight().getY()){
+            } else if (toPos.getY() > size.upperRight().getY()) {
                 toPos.setY(size.upperRight().getY());
                 animal.fullRotate();
             }
         }
-        removeAnimal(animal.getPosition(),animal);
-        addAnimal(toPos,animal);
+        removeAnimal(animal.getPosition(), animal);
+        addAnimal(toPos, animal);
         animal.move(toPos);//wykonuje przypisanie lokalizacji i zmiany codzienne zwierzaka
         return status;
     }
@@ -129,7 +145,7 @@ public class MainMap {
             }
 
             if (values.isEmpty()) {
-                animals.remove(set.getKey());
+                iterat.remove();
             }
         }
     }
@@ -157,10 +173,9 @@ public class MainMap {
         Set<Animal> values = animals.get(pos);
         TreeSet<Animal> treeSet = new TreeSet<Animal>();
         treeSet.addAll(values);
-        list.add(treeSet.getFirst());
-        if(values.size()>1){
-            treeSet.removeAll(values);
-            list.add(treeSet.getFirst());
+        list.add(treeSet.removeFirst());
+        if(!treeSet.isEmpty()){
+            list.add(treeSet.removeFirst());
         }
         return list;
     }
@@ -170,9 +185,9 @@ public class MainMap {
         List<Integer> dnaList = new ArrayList<>(lenGen);
         dnaList = animals.getFirst().multiplicationWith(animals.getLast());
         Dna dna = new Dna(dnaList,lenGen);
-        animals.getFirst().multiplicationLostEnergy(startEnergy);
-        animals.getLast().multiplicationLostEnergy(startEnergy);
-        Animal child = new Animal(animals.getFirst().getPosition(),dna,startEnergy);
+        animals.getFirst().multiplicationLostEnergy(energyForMulti);
+        animals.getLast().multiplicationLostEnergy(energyForMulti);
+        Animal child = new Animal(animals.getFirst().getPosition(),dna,energyForMulti);
         addAnimal(child.getPosition(),child);
     }
 
@@ -193,4 +208,8 @@ public class MainMap {
         //generowanie (pas 0-(sr-szer/2) i (sr+szer/2) - 20% a równik (sr+-szer) - 80%)
     }
 
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

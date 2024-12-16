@@ -2,6 +2,7 @@ package agh.ics.oop.Models.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.lang.Math.sqrt;
 
@@ -60,9 +61,9 @@ public class Dna {
     //pobranie odpowiedniej części dna
     public List<Integer> getPartToMultiplication(float percentageFromMe,boolean isLeft){
         if(isLeft){
-            return value.subList(0, Math.round(value.size()*percentageFromMe));
+            return new ArrayList<>(value.subList(0, (int) Math.ceil(value.size()*percentageFromMe)));
         }else{
-            return value.subList(value.size()-Math.round(value.size()*percentageFromMe), Math.round(value.size()*percentageFromMe));
+            return new ArrayList<>(value.subList((int) (Math.ceil(value.size()*(1-percentageFromMe))),  value.size()));
         }
     }
 
@@ -71,4 +72,23 @@ public class Dna {
         return from + (int) Math.floor(Math.random()* to);
     }
 
+    @Override
+    public String toString() {
+        return "Dna{" +
+                "value=" + value +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Dna dna = (Dna) o;
+        return Objects.equals(value, dna.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
+    }
 }
