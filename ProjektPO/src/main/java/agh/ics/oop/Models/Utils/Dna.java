@@ -13,12 +13,14 @@ public class Dna {
 
     public Dna(int size) {
         this.size = size;
+        this.actual = getRandom(0,size);
         generateDna();
     }
 
     public Dna(List<Integer> value,int size) {
         this.size = size;
         this.value = value;
+        this.actual = getRandom(0,size);
     }
 
     //generowanie dna na początku
@@ -26,13 +28,6 @@ public class Dna {
         for(int i =0;i<size;i++){
             value.add(getRandom(0,8));
         }
-    }
-
-    public void nextDay(){
-        actual = (actual+1)%value.size();
-    }
-    public int getActual() {
-        return value.get(actual);
     }
 
     //stworzenie Dna dziecka
@@ -48,7 +43,7 @@ public class Dna {
         }
 
         //MUTACJE
-        int many = getRandom(0,list.size());  //TUTAJ TEŻ LEPSZE LOSOWANIE BEZ POWTÓRZEŃ ?
+        int many = getRandom(0,list.size());
         for(int i=0;i<many;i++){
             int j = getRandom(0,list.size());
             int k = getRandom(0,8);
@@ -72,11 +67,18 @@ public class Dna {
         return from + (int) Math.floor(Math.random()* to);
     }
 
+
+    public void nextDay(){
+        actual = (actual+1)%value.size();
+    }
+    public int getActual() {
+        return value.get(actual);
+    }
+    public int getSize() {return value.size();}
+
     @Override
     public String toString() {
-        return "Dna{" +
-                "value=" + value +
-                '}';
+        return "Dna=" + value;
     }
 
     @Override

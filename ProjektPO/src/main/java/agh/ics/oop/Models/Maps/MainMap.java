@@ -11,8 +11,9 @@ import static java.lang.Math.sqrt;
 
 public class MainMap {
     //mapa pozwoli jednostkowo dostać się do elementów na polu, hashset do konkretnego elementu w nim i można też po nim iterować
-    private static final Map<Vector2D, Set<Animal>> animals = new HashMap<Vector2D, Set<Animal>>();
+    private final Map<Vector2D, Set<Animal>> animals = new HashMap<Vector2D, Set<Animal>>();
     private final Map<Vector2D, Grass> grasses = new HashMap<Vector2D, Grass>();
+    private int currentDay =0;
 
     private final int startGrassNumber;
     private final int numberOfGrowing;
@@ -47,23 +48,36 @@ public class MainMap {
     }
     //wykonywane przez simulation co dnia, aktualnie cykl jedzenie i rozmnażania połączony
     public void doDay(){
-        killsAnimals();
-        List<Animal> ll = getAllAnimals();
-        for (Animal anima : ll) { // !!!! BARDZO DUŻY PROBLEM TAKIEJ IMPLEMNTACJI NIESTETY ABY MÓC USUWAĆ I PRZYPISYWAĆ ZWIERZĄTA A HASHMAP I HASHSET POTRZEBA ZROBIĆ KOPIĘ DO ITEROWANIA, chociaż może udało by się zrobić iteratorami - pomyślę kiedyś
-            moveTo(anima);
+        for (Map.Entry<Vector2D, Set<Animal>> entry : animals.entrySet()) {
+            Vector2D position = entry.getKey();
+            Set<Animal> animalSet = entry.getValue();
+
+            System.out.println("Pozycja: " + position);
+            System.out.println("Zwierzęta: ");
+            for (Animal animal : animalSet) {
+                System.out.println("  " + animal);
+            }
         }
+
+        killsAnimals();
+
+        moveTo(copyCollection());
+
         cycleEatMulti();
     }
 
     private void generateStartAnimal(){
         RandomPositionGenerator rand = new RandomPositionGenerator(size.upperRight().getX(),size.upperRight().getY(),howMany);
-        Iterator<Vector2D> positions = rand.iterator();
-        while(positions.hasNext()){
-            Vector2D position = positions.next();
-            addAnimal(position,new Animal(position,new Dna(lenGen),startEnergy));
+        for (Vector2D position : rand) {
+            addAnimal(position, new Animal(position, new Dna(lenGen), startEnergy));
         }
     }
 
+    public Set<Animal> copyCollection(){
+        Set<Animal> AllObj = new HashSet<>();
+        for(Set<Animal> set:animals.values()) AllObj.addAll(set);
+        return AllObj;
+    }
 
 
     //runDay
@@ -77,81 +91,86 @@ public class MainMap {
     //czy TreeSet się opłaca ? Jedzenie Reprodukcja a Ruchy usuwanie dodawanie
 
     //sprawdza czy mieści się w mapie
-    public boolean CanMoveTo(Vector2D pos) {
+    public boolean canMoveTo(Vector2D pos) {
         return (size.lowerLeft().precedes(pos) && size.upperRight().follows(pos));
     }
 
-    public ArrayList<Animal> getAllAnimals() {
-        // Get animals sorted in a non-decreasing order
-        ArrayList<Animal> result = new ArrayList<>();
-        for (Set<Animal> animals: animals.values()) result.addAll(animals);
-        return result;
-    }
-
     //porusza zwierzakiem na podstawie jego obrotu
-    public boolean moveTo(Animal animal) {
-        Vector2D toPos = animal.getPosition().add(animal.getDirection().toUnitVector());
-        boolean status = false;
-        if (!CanMoveTo(toPos)) {
-            status = true;
-            if (toPos.getX() < 0) {
-                toPos.setX(size.upperRight().getX());
-            } else if (toPos.getX() > size.upperRight().getX()) {
-                toPos.setX(0);
-            } else if (toPos.getY() < 0) {
-                toPos.setY(0);
-                animal.fullRotate();
-            } else if (toPos.getY() > size.upperRight().getY()) {
-                toPos.setY(size.upperRight().getY());
-                animal.fullRotate();
+    public void moveTo(Set<Animal> AllAnimals) {
+        try {
+            for(Animal animal:AllAnimals){
+                Vector2D toPos = animal.getPosition().add(animal.getDirection().toUnitVector());
+                boolean status = false;
+                if (!canMoveTo(toPos)) {
+                    status = true;
+                    if (toPos.getX() < 0) {
+                        toPos.setX(size.upperRight().getX());
+                    } else if (toPos.getX() > size.upperRight().getX()) {
+                        toPos.setX(0);
+                    }
+                    if (toPos.getY() < 0) {
+                        toPos.setY(0);
+                        animal.fullRotate();
+                    } else if (toPos.getY() > size.upperRight().getY()) {
+                        toPos.setY(size.upperRight().getY());
+                        animal.fullRotate();
+                    }
+                }
+                removeAnimal(animal.getPosition(), animal);
+                addAnimal(toPos, animal);
+                animal.move(toPos);//wykonuje przypisanie lokalizacji i zmiany codzienne zwierzaka
             }
+        }catch (Exception e){
+            System.out.println();
         }
-        removeAnimal(animal.getPosition(), animal);
-        addAnimal(toPos, animal);
-        animal.move(toPos);//wykonuje przypisanie lokalizacji i zmiany codzienne zwierzaka
-        return status;
     }
 
-    public static void addAnimal(Vector2D pos, Animal animal) {
+    public boolean addAnimal(Vector2D pos, Animal animal) {
+        if (animal.getEnergy()<0 || animal.getDna().getSize() != lenGen)
+            return false;
         // computeIfAbsent tworzy nowy HashSet, jeśli jeszcze nie istnieje
-        animals.computeIfAbsent(pos, _ -> new HashSet<>()).add(animal);
+        animals.computeIfAbsent(pos, k -> new HashSet<>()).add(animal);
+        return true;
     }
 
     //usuwanie zwierzaka i hashseta gdy trzeba
-    public static void removeAnimal(Vector2D pos, Animal animal) {
+    public boolean removeAnimal(Vector2D pos, Animal animal) {
         if (animals.containsKey(pos)) {
+            boolean status = false;
             Set<Animal> set = animals.get(pos);
-            set.remove(animal);
+            status = set.remove(animal);
             if (set.isEmpty()) {
                 animals.remove(pos);
             }
-        }
+            return status;
+        }else
+            return false;
     }
 
     //iteruje i usuwa  zwierzaki z energia == 0
     private void killsAnimals(){
-        Iterator<Map.Entry<Vector2D, Set<Animal>>> iterat = animals.entrySet().iterator();
+        Iterator<Map.Entry<Vector2D, Set<Animal>>> iteratMap = animals.entrySet().iterator();
 
-        while (iterat.hasNext()) {
-            Map.Entry<Vector2D, Set<Animal>> set = iterat.next();
+        while (iteratMap.hasNext()) {
+            Map.Entry<Vector2D, Set<Animal>> set = iteratMap.next();
             Set<Animal> values = set.getValue();
-            Iterator<Animal> iterator = values.iterator();
+            Iterator<Animal> iteratSet = values.iterator();
 
-            while (iterator.hasNext()) {
-                Animal anim = iterator.next();
+            while (iteratSet.hasNext()) {
+                Animal anim = iteratSet.next();
                 if (anim.getEnergy() <= 0) {
-                    iterator.remove();
+                    iteratSet.remove();
                 }
             }
 
             if (values.isEmpty()) {
-                iterat.remove();
+                iteratMap.remove();
             }
         }
     }
 
     //wykonanie cyklu dla każdego pola sprawdzenie czy można zjeść i się rozmnożyć
-    public void cycleEatMulti(){
+    private void cycleEatMulti(){
         for(Map.Entry<Vector2D, Set<Animal>> animal : animals.entrySet()) {
             if(animal.getValue().size() == 1 && !isGrassAt(animal.getKey())) {
                 continue;
@@ -161,7 +180,7 @@ public class MainMap {
                 strongest.getFirst().eat(energyFromEat);
                 grasses.remove(animal.getKey());
             }
-            if(strongest.getLast() != null && strongest.getLast().getEnergy() >= energyForMulti){
+            if(strongest.getLast() != null && strongest.getLast().getEnergy() >= energyToAdult){
                 multipl(strongest);
             }
         }
@@ -171,8 +190,7 @@ public class MainMap {
     public List<Animal> getTwoStrongest(Vector2D pos){
         List<Animal> list = new ArrayList<>(2);
         Set<Animal> values = animals.get(pos);
-        TreeSet<Animal> treeSet = new TreeSet<Animal>();
-        treeSet.addAll(values);
+        TreeSet<Animal> treeSet = new TreeSet<Animal>(values);
         list.add(treeSet.removeFirst());
         if(!treeSet.isEmpty()){
             list.add(treeSet.removeFirst());
@@ -183,12 +201,16 @@ public class MainMap {
     //stworzenie nowego potomka
     private void multipl(List<Animal> animals){
         List<Integer> dnaList = new ArrayList<>(lenGen);
-        dnaList = animals.getFirst().multiplicationWith(animals.getLast());
-        Dna dna = new Dna(dnaList,lenGen);
-        animals.getFirst().multiplicationLostEnergy(energyForMulti);
-        animals.getLast().multiplicationLostEnergy(energyForMulti);
-        Animal child = new Animal(animals.getFirst().getPosition(),dna,energyForMulti);
-        addAnimal(child.getPosition(),child);
+        try {
+            dnaList = animals.getFirst().multiplicationWith(animals.getLast());
+            Dna dna = new Dna(dnaList, lenGen);
+            animals.getFirst().multiplicationLostEnergy(energyForMulti);
+            animals.getLast().multiplicationLostEnergy(energyForMulti);
+            Animal child = new Animal(animals.getFirst().getPosition(), dna, 2 * energyForMulti);
+            addAnimal(child.getPosition(), child);
+        }catch (IllegalArgumentException e){
+            e.printStackTrace();
+        }
     }
 
 
