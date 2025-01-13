@@ -174,5 +174,50 @@ public class Map_Test {
         Assertions.assertEquals(6,child.getEnergy());
         Assertions.assertEquals(1,animal.getNumberOfChild());
         Assertions.assertEquals(1,animal2.getNumberOfChild());
+
+
+        mapa = new MainMap(size,set,0);
+        dna = new Dna(List.of(0,0,0),1);
+        animal = new Animal(new Vector2D(1,1),dna,10);
+        mapa.addAnimal(animal.getPosition(),animal);
+
+        dna2 = new Dna(List.of(4,0,0),1);
+        animal2 = new Animal(new Vector2D(1,3),dna2,7);
+        mapa.addAnimal(animal2.getPosition(),animal2);
+
+        Dna dna3 = new Dna(List.of(2,0,0),1);
+        Animal animal3 = new Animal(new Vector2D(0,2),dna3,10);
+        mapa.addAnimal(animal3.getPosition(),animal3);
+
+        mapa.doDay();
+        Assertions.assertEquals(4,mapa.getAnimalsAt(new Vector2D(1,2)).size());
+        Assertions.assertEquals(6,animal.getEnergy());
+        Assertions.assertEquals(6,animal3.getEnergy());
+        Assertions.assertEquals(1,animal.getNumberOfChild());
+        Assertions.assertEquals(0,animal2.getNumberOfChild());
+        Assertions.assertEquals(1,animal3.getNumberOfChild());
+
+
+        mapa = new MainMap(size,set,0);
+        dna = new Dna(List.of(0,0,0),1);
+        animal = new Animal(new Vector2D(1,1),dna,10);
+        mapa.addAnimal(animal.getPosition(),animal);
+
+        dna2 = new Dna(List.of(4,0,0),1);
+        animal2 = new Animal(new Vector2D(1,3),dna2,8);
+        mapa.addAnimal(animal2.getPosition(),animal2);
+
+        dna3 = new Dna(List.of(2,0,0),1);
+        animal3 = new Animal(new Vector2D(0,2),dna3,4);
+        mapa.addAnimal(animal3.getPosition(),animal3);
+
+        mapa.doDay();
+        Assertions.assertEquals(4,mapa.getAnimalsAt(new Vector2D(1,2)).size());
+        Assertions.assertEquals(6,animal.getEnergy());
+        Assertions.assertEquals(4,animal2.getEnergy());
+        Assertions.assertEquals(3,animal3.getEnergy());
+        Assertions.assertEquals(1,animal.getNumberOfChild());
+        Assertions.assertEquals(1,animal2.getNumberOfChild());
+        Assertions.assertEquals(0,animal3.getNumberOfChild());
     }
 }

@@ -1,10 +1,13 @@
 package agh.ics.oop.Models.Sprite;
 
+import agh.ics.oop.Models.Enums.ChangeType;
 import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.GenerateID;
+import agh.ics.oop.Models.Utils.Observer;
 import agh.ics.oop.Models.Utils.Vector2D;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,8 +21,13 @@ public class Animal implements MapObject{
     private int ID;
     private int currentDay = 0;
     private int numberOfChild = 0;
-    private final boolean isAlive = false;
+    private int numberOfAllChild = 0;
+    private boolean isAlive = true;
     private final int dayOfDead = -1;
+    private int howManyEaten = 0;
+    private ArrayList<Animal> parents = new ArrayList<>();
+
+    private Observer observer = null;
 
     public Animal(Vector2D position,Dna dna,int energy){
         this.position = position;
@@ -47,6 +55,8 @@ public class Animal implements MapObject{
 
     public void eat(int energy){
         if (energy>=0) this.energy += energy;
+        howManyEaten++;
+        if (observer != null) observer.update(this, ChangeType.Eat);
     }
 
     public void rotate(int number){
@@ -56,6 +66,7 @@ public class Animal implements MapObject{
     public void nextDay(){ //Przejscie do kolejnego dnia
         rotate(dna.getActual()); // wykonanie obrotu na podstawie dna aktualnego
         dna.nextDay();
+        if (observer != null) observer.update(this, ChangeType.ActiveGen);
     }
     public void fullRotate(){
         rotate(4);
@@ -72,7 +83,9 @@ public class Animal implements MapObject{
 
     public void multiplicationLostEnergy(int energy) {
         this.energy -= energy;
-        this.numberOfChild ++;
+        numberOfChild++;
+        addAllChild();
+        if (observer != null) observer.update(this, ChangeType.Child);
     }
 
     public int getCurrentDay() {
@@ -91,8 +104,46 @@ public class Animal implements MapObject{
     public MapDirection getDirection() {
         return direction;
     }
+    public int getHowManyEaten(){return howManyEaten;}
 
+    public void addAllChild() {
+        numberOfAllChild++;
+        if (observer != null) observer.update(this, ChangeType.AllChild);
+        if (parents.size()== 2){
+            parents.get(0).addAllChild();
+            parents.get(1).addAllChild();
+        }
+    }
+    public int getAllChild() {
+        return numberOfAllChild;
+    }
+
+    public void isDead(){
+        isAlive=false;
+        if (observer != null) observer.update(this, ChangeType.Dead);
+    }
+    public boolean isAlive(){
+        return isAlive;
+    }
+
+    public void addParent(Animal one,Animal two){
+        parents.add(one);
+        parents.add(two);
+    }
     //Wymagane do hashset i treeset
+
+    public void setObserver(Observer observer){
+        this.observer=observer;
+        observer.update(this, ChangeType.Gen);
+        observer.update(this, ChangeType.ActiveGen);
+        observer.update(this, ChangeType.Eat);
+        observer.update(this, ChangeType.Child);
+        observer.update(this, ChangeType.AllChild);
+    }
+
+    public void removeObserver(){
+        this.observer=null;
+    }
 
 
     @Override

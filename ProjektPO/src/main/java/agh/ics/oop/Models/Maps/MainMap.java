@@ -9,7 +9,7 @@ import java.util.*;
 
 import static java.lang.Math.sqrt;
 
-public class MainMap {
+public class MainMap extends DayStatistics {
     //mapa pozwoli jednostkowo dostać się do elementów na polu, hashset do konkretnego elementu w nim i można też po nim iterować
     private final Map<Vector2D, Set<Animal>> animals = new HashMap<Vector2D, Set<Animal>>();
     private final Map<Vector2D, Grass> grasses = new HashMap<Vector2D, Grass>();
@@ -25,9 +25,12 @@ public class MainMap {
     private final int startEnergy;
     private final int howMany;
 
+    private final int ID;
+
     private Boundary size;
     private int equator;
     private int equatorHeight;
+    private boolean run = true;
 
     //MapSettings - wszystkie opcje jakie będą ustawiane
     public MainMap(Boundary size, MapSettings settings,int howManyAnimals) {
@@ -45,25 +48,34 @@ public class MainMap {
         this.startEnergy = settings.startEnergy();
         this.howMany = howManyAnimals;
         generateStartAnimal();
+        setSurface(size);
+        setStartEnergy(howManyAnimals,startEnergy);
+
+        ID = GenerateID.GetID();
     }
     //wykonywane przez simulation co dnia, aktualnie cykl jedzenie i rozmnażania połączony
     public void doDay(){
+
+        killsAnimals();
+        if(animals.isEmpty())
+            run = false;
+
+        moveTo(copyCollection());
+        allMove();
+
+
+        cycleEatMulti();
+
+        System.out.println("Mapa: "+ID);
         for (Map.Entry<Vector2D, Set<Animal>> entry : animals.entrySet()) {
             Vector2D position = entry.getKey();
             Set<Animal> animalSet = entry.getValue();
-
             System.out.println("Pozycja: " + position);
             System.out.println("Zwierzęta: ");
             for (Animal animal : animalSet) {
                 System.out.println("  " + animal);
             }
         }
-
-        killsAnimals();
-
-        moveTo(copyCollection());
-
-        cycleEatMulti();
     }
 
     private void generateStartAnimal(){
@@ -129,6 +141,9 @@ public class MainMap {
         if (animal.getEnergy()<0 || animal.getDna().getSize() != lenGen)
             return false;
         // computeIfAbsent tworzy nowy HashSet, jeśli jeszcze nie istnieje
+        if(!animals.containsKey(pos)){
+            changeNumberOfUsePlaces(1);
+        }
         animals.computeIfAbsent(pos, k -> new HashSet<>()).add(animal);
         return true;
     }
@@ -141,6 +156,7 @@ public class MainMap {
             status = set.remove(animal);
             if (set.isEmpty()) {
                 animals.remove(pos);
+                changeNumberOfUsePlaces(-1);
             }
             return status;
         }else
@@ -160,11 +176,14 @@ public class MainMap {
                 Animal anim = iteratSet.next();
                 if (anim.getEnergy() <= 0) {
                     iteratSet.remove();
+                    anim.isDead();
+                    changeNumberOfAnimals(false,anim);
                 }
             }
 
             if (values.isEmpty()) {
                 iteratMap.remove();
+                changeNumberOfUsePlaces(-1);
             }
         }
     }
@@ -179,7 +198,9 @@ public class MainMap {
             if(isGrassAt(animal.getKey())){
                 strongest.getFirst().eat(energyFromEat);
                 grasses.remove(animal.getKey());
+                oneEat(energyFromEat);
             }
+
             if(strongest.getLast() != null && strongest.getLast().getEnergy() >= energyToAdult){
                 multipl(strongest);
             }
@@ -208,6 +229,8 @@ public class MainMap {
             animals.getLast().multiplicationLostEnergy(energyForMulti);
             Animal child = new Animal(animals.getFirst().getPosition(), dna, 2 * energyForMulti);
             addAnimal(child.getPosition(), child);
+            child.addParent(animals.getFirst(),animals.getLast());
+            changeNumberOfAnimals(true,child);
         }catch (IllegalArgumentException e){
             e.printStackTrace();
         }
@@ -223,6 +246,10 @@ public class MainMap {
     //isGrassAt
     public boolean isGrassAt(Vector2D pos) {
         return grasses.containsKey(pos);
+    }
+
+    public boolean checkRun(){
+        return run;
     }
 
     public void growGrass(int howMany){
