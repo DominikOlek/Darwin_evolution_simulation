@@ -169,7 +169,7 @@ public class MainMap {
         }
     }
 
-    //wykonanie cyklu dla każdego pola sprawdzenie czy można zjeść i się rozmnożyć
+    //wykonanie cyklu dla każdego pola, sprawdzenie czy można zjeść i się rozmnożyć
     private void cycleEatMulti(){
         for(Map.Entry<Vector2D, Set<Animal>> animal : animals.entrySet()) {
             if(animal.getValue().size() == 1 && !isGrassAt(animal.getKey())) {
@@ -213,7 +213,35 @@ public class MainMap {
         }
     }
 
+    private Vector2D randomEquatorPosition() {
+        int width = size.upperRight().getX() + 1;
+        int minY = Math.max(size.lowerLeft().getY(), equator - equatorHeight/2);
+        int maxY = Math.min(size.upperRight().getY(), equator + equatorHeight/2);
 
+        int randX = (int) (Math.random() * width); // od 0 do width - 1
+        int randY = minY + (int) (Math.random() * (maxY - minY + 1)); // [minY...maxY]
+
+        return new Vector2D(randX, randY);
+    }
+
+    private Vector2D randomOutsideEquatorPosition() {
+        int width = size.upperRight().getX() + 1;
+        int height = size.upperRight().getY() + 1;
+
+        int minEquatorY = Math.max(size.lowerLeft().getY(), equator - equatorHeight/2);
+        int maxEquatorY = Math.min(size.upperRight().getY(), equator + equatorHeight/2);
+
+        while (true) {
+            int randX = (int) (Math.random() * width);
+            int randY = (int) (Math.random() * height);
+
+
+            if (randY >= minEquatorY && randY <= maxEquatorY) {
+                continue;
+            }
+            return new Vector2D(randX, randY);
+        }
+    }
 
     //AnimalsAt
     public Set<Animal> getAnimalsAt(Vector2D pos) {
@@ -226,8 +254,25 @@ public class MainMap {
     }
 
     public void growGrass(int howMany){
-        int toGood = howMany/5;
+        //int toGood = howMany/5;
         //generowanie (pas 0-(sr-szer/2) i (sr+szer/2) - 20% a równik (sr+-szer) - 80%)
+        int planted = 0;
+
+        while (planted < howMany) {
+            // czy trawa będzie na równiku
+            double rand = Math.random(); // [0..1)
+            Vector2D pos;
+            if (rand < 0.8) {
+                pos = randomEquatorPosition();
+            } else {
+                pos = randomOutsideEquatorPosition();
+            }
+
+            if (!isGrassAt(pos)) {
+                grasses.put(pos, new Grass(pos, energyFromEat));
+                planted++;
+            }
+        }
     }
 
     @Override
