@@ -3,6 +3,8 @@ package agh.ics.oop;
 import agh.ics.oop.Models.Maps.MainMap;
 import agh.ics.oop.Models.Sprite.Animal;
 import agh.ics.oop.Models.Utils.*;
+import agh.ics.oop.UI.SimulationApp;
+import javafx.application.Application;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -12,12 +14,20 @@ import java.util.Set;
 public class Main {
     public static void main(String[] args) {
         try {
+            try {
+                Application.launch(SimulationApp.class, args);
+            }catch(IllegalArgumentException e){
+                System.out.println(e.getMessage());
+                return;
+            }
+            /*
             Boundary b = new Boundary(new Vector2D(0, 0), new Vector2D(5, 5));
             AnimalStatistics stat = new AnimalStatistics();
             //TO SAMO TOADULT A TOMULTIPLICATION
-            MapSettings s = new MapSettings(5, 0, 1, 6, 5, 0, 0, 20);
-            Simulation one = new Simulation(s,b,20);
-            Simulation two = new Simulation(s,b,20);
+            MapSettings s = new MapSettings(false,5, 0, 1, 6, 5, 0,20 ,0, 20,0,0);
+            MainMap map = new MainMap(b,s);
+            Simulation one = new Simulation(map);
+            Simulation two = new Simulation(map);
             List<Simulation> sims = new LinkedList<Simulation>(){{add(two);add(one);}};
             SimulationEngine eng=  new SimulationEngine(sims);
             eng.runAsyncInThreadPool();

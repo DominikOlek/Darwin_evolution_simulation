@@ -9,29 +9,28 @@ public abstract class DayStatistics {
     private int numberOfAnimalsLife = 0;
     private int numberOfAnimalsDead = 0;
     private int numbersOfGrass = 0;
-    private int numbersOfPlaces;
+    protected int numbersOfPlaces;
     private float allEnergy;
     private float allLifeTime = 0;
     private float allNumberOfChildren = 0;
-    private boolean isAddDna = true;
     private int numberOfUsePlaces = 0;
 
     private Map<Dna,Integer> countDna =  new HashMap<Dna,Integer>();
 
-    public void setSurface(Boundary boundary) {
+    protected void setSurface(Boundary boundary) {
         numbersOfPlaces = (boundary.upperRight().getX()-boundary.lowerLeft().getX() +1 ) * (boundary.upperRight().getY()-boundary.lowerLeft().getY() +1);
     }
 
-    public void setStartEnergy(int howMany,float startEnergy) {
+    protected void setStartEnergy(int howMany,float startEnergy) {
         allEnergy = howMany*startEnergy;
         numberOfAnimalsLife = howMany;
     }
 
-    public void changeNumberOfUsePlaces(int howMany) {
+    protected void changeNumberOfUsePlaces(int howMany) {
         numberOfUsePlaces += howMany;
     }
 
-    public void changeNumberOfAnimals(boolean isBorn, Animal animal) {
+    protected void changeNumberOfAnimals(boolean isBorn, Animal animal) {
         if (isBorn) {
             this.numberOfAnimalsLife++;
             allNumberOfChildren+=2;
@@ -44,42 +43,66 @@ public abstract class DayStatistics {
         }
     }
 
-    public void addDna(Dna dna) {
+    protected void addDna(Dna dna) {
         countDna.compute(dna, (k, a) -> countDna.containsKey(dna) ? a + 1 : 1);
-        isAddDna = true;
     }
 
-    public void allMove(){
+    protected void changeGrass(int number){
+        numbersOfGrass += number;
+    }
+
+    protected void allMove(){
         allEnergy -= numberOfAnimalsLife;
     }
 
-    public void oneEat(int energy){
+    protected void oneEat(int energy){
         this.allEnergy += energy;
+        changeGrass(-1);
     }
 
     public int getNumberOfAnimals(){
         return this.numberOfAnimalsLife+this.numberOfAnimalsDead;
     }
+    public int getNumbersOfGrass(){
+        return numbersOfGrass;
+    }
     public int getNumberOfFreePlaces(){
         return this.numbersOfPlaces - this.numberOfUsePlaces;
     }
     public float getAverageEnergy(){
-        return this.allEnergy/this.numberOfAnimalsLife;
+        if (numberOfAnimalsLife !=0)
+            return this.allEnergy/this.numberOfAnimalsLife;
+        return 0;
     }
     public float getAverageLifeTime(){
-        return this.allLifeTime/this.numberOfAnimalsDead;
+        if (numberOfAnimalsDead!=0)
+            return this.allLifeTime/this.numberOfAnimalsDead;
+        return 0;
     }
     public float getAverageNumberOfChildren(){
-        return this.allNumberOfChildren/this.numberOfAnimalsLife;
+        if (numberOfAnimalsLife !=0)
+            return this.allNumberOfChildren/this.numberOfAnimalsLife;
+        return 0;
     }
     public List<Map.Entry<Dna,Integer>> getTopDna(int howMany) {
-        if (howMany <0 || !isAddDna)
+        if (howMany <0)
             return null;
         PriorityQueue<Map.Entry<Dna,Integer>> result = new PriorityQueue<>((a,b)-> a.getValue().compareTo(b.getValue()));
         result.addAll(countDna.entrySet());
-        isAddDna = false;
 
         return result.stream().limit(howMany).collect(Collectors.toList());
+    }
+
+    public Map<String,String> getStatistics() {
+        Map<String,String> data=new HashMap<>();
+        data.put("Number of Animals: ",Integer.toString(getNumberOfAnimals()));
+        data.put("Number of Free Places: ",Integer.toString(getNumberOfFreePlaces()));
+        data.put("Number of Grass: ",Integer.toString(getNumbersOfGrass()));
+        data.put("Avg Energy: ",String.format("%.2f", getAverageEnergy()));
+        data.put("Avg LifeTime: ",String.format("%.2f", getAverageLifeTime()));
+        data.put("Avg Number of Child: ",String.format("%.2f", getAverageNumberOfChildren()));
+        data.put("Top Dna: ",getTopDna(3).toString());
+        return data;
     }
 
 }

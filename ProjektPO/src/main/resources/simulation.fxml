@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            minHeight="720.0" minWidth="1080.0"
+            fx:controller="agh.ics.oop.UI.SimulationPresenter"
+            stylesheets="simulationCSS.css">
+    <top>
+        <Label fx:id="ID" text="0" styleClass="animStat"/>
+    </top>
+    <center>
+        <ScrollPane fitToHeight="true" fitToWidth="true">
+        <GridPane fx:id="gridPane" gridLinesVisible="true" alignment="CENTER">
+        </GridPane>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <HBox spacing="10.0" >
+            <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="540">
+                <Label text="Dane zwierzaka"/>
+                <GridPane fx:id="animalStat" alignment="CENTER" >
+                </GridPane>
+            </VBox>
+
+            <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Dane mapy"/>
+                <GridPane fx:id="dayStat" alignment="CENTER" >
+                </GridPane>
+                <Pane VBox.vgrow="ALWAYS" />
+                <Button fx:id="changeStateBtn"  prefHeight="37.0" prefWidth="79.0" onAction="#changeState" text="Pause" maxWidth="Infinity" />
+            </VBox>
+        </HBox>
+    </bottom>
+
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10" />
+    </padding>
+</BorderPane>

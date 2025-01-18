@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static java.lang.Math.random;
 import static java.lang.Math.sqrt;
 
 public class Dna {
@@ -31,7 +32,7 @@ public class Dna {
     }
 
     //stworzenie Dna dziecka
-    public List<Integer> multiplicationWith(Dna other,float percentageFromMe){
+    public List<Integer> multiplicationWith(Dna other,float percentageFromMe,int minMutation,int maxMutation,boolean isSwap){
         List<Integer> list = new ArrayList<>();
         //podział lewy czy prawy
         if (Math.random() < 0.5f ){
@@ -43,11 +44,18 @@ public class Dna {
         }
 
         //MUTACJE
-        int many = getRandom(0,list.size());
+        int many = getRandom(minMutation,maxMutation);
         for(int i=0;i<many;i++){
             int j = getRandom(0,list.size());
             int k = getRandom(0,8);
-            list.set(j, k);
+            if(isSwap && getRandom(0,100)<50){
+                k=getRandom(0,list.size());
+                int temp = list.get(j);
+                list.set(j, list.get(k));
+                list.set(k, temp);
+            }else {
+                list.set(j, k);
+            }
         }
 
         return list;
@@ -78,7 +86,7 @@ public class Dna {
 
     @Override
     public String toString() {
-        return "Dna=" + value;
+        return value.toString();
     }
 
     @Override

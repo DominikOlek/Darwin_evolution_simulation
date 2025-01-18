@@ -74,7 +74,7 @@ public class Animal_Test {
         Dna dna2 = new Dna(List.of(7,6,5,4,3),5);
         Animal animal2 = new Animal(vector2,dna2,4);
 
-        List<Integer> childDna = animal.multiplicationWith(animal2); // Z powodu mutacji nie da się przewidzieć dokładnego wyniku
+        List<Integer> childDna = animal.multiplicationWith(animal2,0,4,false); // Z powodu mutacji nie da się przewidzieć dokładnego wyniku
 
         Assertions.assertEquals(5,childDna.size());
 
@@ -86,7 +86,7 @@ public class Animal_Test {
         dna2 = new Dna(List.of(7,6,5,4,3),5);
         animal2 = new Animal(vector2,dna2,5);
 
-        childDna = animal.multiplicationWith(animal2); // Z powodu mutacji nie da się przewidzieć dokładnego wyniku
+        childDna = animal.multiplicationWith(animal2,0,4,true); // Z powodu mutacji nie da się przewidzieć dokładnego wyniku
 
         Assertions.assertEquals(5,childDna.size());
 
@@ -99,7 +99,7 @@ public class Animal_Test {
         animal2 = new Animal(vector2,dna2,5);
 
         try {
-            animal.multiplicationWith(animal2);
+            animal.multiplicationWith(animal2,0,4,false);
             Assertions.fail("Tu powinnien być wyjątek, inne pozycje");
         }catch (IllegalArgumentException e){
             Assertions.assertNotNull(e);

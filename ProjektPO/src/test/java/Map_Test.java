@@ -18,8 +18,8 @@ public class Map_Test {
     @Test
     public void constructorAndCanMoveTEST() {
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
-        MapSettings set = new MapSettings(5, 0, 1, 5, 3, 0, 0, 20);
-        MainMap map = new MainMap(size,set,1);
+        MapSettings set = new MapSettings(false,5, 0, 1, 5, 3, 0, 1,0, 20,0,7);
+        MainMap map = new MainMap(size,set);
         Set<Animal> animals = map.copyCollection();
         Animal animal = animals.stream().findFirst().orElseThrow();
 
@@ -36,8 +36,8 @@ public class Map_Test {
     @Test
     public void addAndRemoveTEST() {
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
-        MapSettings set = new MapSettings(5, 0, 1, 5, 3, 0, 0, 20);
-        MainMap mapa2 = new MainMap(size,set,0);
+        MapSettings set = new MapSettings(false,5, 0, 1, 5, 3, 0, 0,0, 20,0,7);
+        MainMap mapa2 = new MainMap(size,set);
 
         Vector2D vector = new Vector2D(1,1);
         Dna dna = new Dna(List.of(0,1,2,3,4),5);
@@ -68,8 +68,8 @@ public class Map_Test {
         //KILL
 
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
-        MapSettings set = new MapSettings(3, 0, 1, 5, 3, 0, 0, 1);
-        MainMap mapa = new MainMap(size,set,0);
+        MapSettings set = new MapSettings(false,3, 0, 1, 5, 3, 0, 0,0, 20,0,7);
+        MainMap mapa = new MainMap(size,set);
 
         Dna dna = new Dna(List.of(2,4,0),1);
         Animal animal = new Animal(new Vector2D(1,1),dna,1);
@@ -129,7 +129,7 @@ public class Map_Test {
         Assertions.assertEquals(6,animal2.getDna().getActual());
 
 
-        mapa = new MainMap(size,set,0);
+        mapa = new MainMap(size,set);
 
         dna = new Dna(List.of(0,0,0),1);
         animal = new Animal(new Vector2D(1,1),dna,4);
@@ -155,7 +155,7 @@ public class Map_Test {
 
         //ROZMNAŻANIE
 
-        mapa = new MainMap(size,set,0);
+        mapa = new MainMap(size,set);
         dna = new Dna(List.of(0,0,0),1);
         animal = new Animal(new Vector2D(1,1),dna,10);
         mapa.addAnimal(animal.getPosition(),animal);
@@ -176,7 +176,7 @@ public class Map_Test {
         Assertions.assertEquals(1,animal2.getNumberOfChild());
 
 
-        mapa = new MainMap(size,set,0);
+        mapa = new MainMap(size,set);
         dna = new Dna(List.of(0,0,0),1);
         animal = new Animal(new Vector2D(1,1),dna,10);
         mapa.addAnimal(animal.getPosition(),animal);
@@ -198,7 +198,7 @@ public class Map_Test {
         Assertions.assertEquals(1,animal3.getNumberOfChild());
 
 
-        mapa = new MainMap(size,set,0);
+        mapa = new MainMap(size,set);
         dna = new Dna(List.of(0,0,0),1);
         animal = new Animal(new Vector2D(1,1),dna,10);
         mapa.addAnimal(animal.getPosition(),animal);

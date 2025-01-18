@@ -1,11 +1,13 @@
 package agh.ics.oop.Models.Sprite;
 
 import agh.ics.oop.Models.Enums.ChangeType;
+import agh.ics.oop.Models.Enums.FileNames;
 import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.GenerateID;
 import agh.ics.oop.Models.Utils.Observer;
 import agh.ics.oop.Models.Utils.Vector2D;
+import agh.ics.oop.UI.WorldElementBox;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,11 +15,12 @@ import java.util.Objects;
 
 import static agh.ics.oop.Models.Utils.GenerateID.GetID;
 
-public class Animal implements MapObject{
+public class Animal implements MapObject, Comparable<Animal> {
     private Vector2D position;
     private MapDirection direction;
     private Dna dna;
     private int energy;
+    private int adultEnergy=40;
     private int ID;
     private int currentDay = 0;
     private int numberOfChild = 0;
@@ -28,6 +31,12 @@ public class Animal implements MapObject{
     private ArrayList<Animal> parents = new ArrayList<>();
 
     private Observer observer = null;
+    private WorldElementBox graph;
+
+    public Animal(Vector2D position,Dna dna,int energy,int adultEnergy){
+        this(position,dna,energy);
+        this.adultEnergy= adultEnergy;
+    }
 
     public Animal(Vector2D position,Dna dna,int energy){
         this.position = position;
@@ -36,6 +45,23 @@ public class Animal implements MapObject{
         this.direction = MapDirection.NORTH;
         this.ID = GetID();
         nextDay();
+        graph = new WorldElementBox(this);
+    }
+
+    @Override
+    public WorldElementBox getGraph() {
+        return graph;
+    }
+
+    @Override
+    public FileNames getFileName() {
+        if (energy > adultEnergy){
+            return FileNames.Strong;
+        } else if (energy > 5) {
+            return FileNames.Medium;
+        }else{
+            return FileNames.Weak;
+        }
     }
 
 
@@ -72,9 +98,9 @@ public class Animal implements MapObject{
         rotate(4);
     }
 
-    public List<Integer> multiplicationWith(Animal other){
+    public List<Integer> multiplicationWith(Animal other,int minMutation,int maxMutation,boolean isSwap){
         if (!other.getPosition().equals(position)) throw new IllegalArgumentException("Position is not the same as the position "+other.getPosition()+" "+position);
-        return dna.multiplicationWith(other.dna, (float)energy /(energy+other.energy));
+        return dna.multiplicationWith(other.dna, (float)energy /(energy+other.energy),minMutation,maxMutation,isSwap);
     }
 
     public int getEnergy() {
@@ -185,11 +211,6 @@ public class Animal implements MapObject{
 
     @Override
     public String toString() {
-        return "Animal{" +
-                "position=" + position +
-                ", direction=" + direction +
-                ", dna=" + dna +
-                ", energy=" + energy +
-                '}';
+        return direction.toString();
     }
 }

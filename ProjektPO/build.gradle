@@ -1,9 +1,15 @@
 plugins {
+    id 'application'
     id 'java'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
 group = 'org.example'
 version = '1.0-SNAPSHOT'
+
+application {
+    getMainClass().set('agh.ics.oop.Main')
+}
 
 java {
     sourceCompatibility = '21'
@@ -11,6 +17,11 @@ java {
 }
 repositories {
     mavenCentral()
+}
+
+javafx {
+    version = "17"
+    modules = ['javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.graphics', 'javafx.media', 'javafx.swing', 'javafx.web']
 }
 
 dependencies {

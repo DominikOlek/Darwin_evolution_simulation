@@ -1,11 +1,13 @@
 package agh.ics.oop.Models.Maps;
 
-import agh.ics.oop.Models.Enums.MoveDirection;
 import agh.ics.oop.Models.Sprite.Animal;
 import agh.ics.oop.Models.Sprite.Grass;
+import agh.ics.oop.Models.Sprite.MapObject;
 import agh.ics.oop.Models.Utils.*;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.lang.Math.sqrt;
 
@@ -13,6 +15,8 @@ public class MainMap extends DayStatistics {
     //mapa pozwoli jednostkowo dostać się do elementów na polu, hashset do konkretnego elementu w nim i można też po nim iterować
     private final Map<Vector2D, Set<Animal>> animals = new HashMap<Vector2D, Set<Animal>>();
     private final Map<Vector2D, Grass> grasses = new HashMap<Vector2D, Grass>();
+    private final List<MapObserver> observers = new ArrayList<MapObserver>();
+
     private int currentDay =0;
 
     private final int startGrassNumber;
@@ -24,6 +28,8 @@ public class MainMap extends DayStatistics {
     private final int energyForMulti;
     private final int startEnergy;
     private final int howMany;
+    private final int minMutation;
+    private final int maxMutation;
 
     private final int ID;
 
@@ -31,9 +37,10 @@ public class MainMap extends DayStatistics {
     private int equator;
     private int equatorHeight;
     private boolean run = true;
+    private boolean isSwap = false;
 
     //MapSettings - wszystkie opcje jakie będą ustawiane
-    public MainMap(Boundary size, MapSettings settings,int howManyAnimals) {
+    public MainMap(Boundary size, MapSettings settings) {
         this.startGrassNumber = settings.startGrassNumber();
         this.size = size;
         this.numberOfGrowing = settings.numberOfGrowing();
@@ -42,21 +49,27 @@ public class MainMap extends DayStatistics {
 
         this.lenGen = settings.lenGen();
         this.energyFromEat = settings.energyFromEat();
-        this.growForDay = settings.growForDay();
+        this.growForDay = settings.numberOfGrowing();
         this.energyToAdult = settings.energyToAdult();
         this.energyForMulti = settings.energyForMulti();
         this.startEnergy = settings.startEnergy();
-        this.howMany = howManyAnimals;
+        this.howMany = settings.startAnimalNumber();
+        this.minMutation = settings.minMutation();
+        this.maxMutation = settings.maxMutation();
+        this.isSwap = settings.whichMutation();
         generateStartAnimal();
         setSurface(size);
-        setStartEnergy(howManyAnimals,startEnergy);
+        setStartEnergy(howMany,startEnergy);
+        growGrass(settings.startGrassNumber());
+
 
         ID = GenerateID.GetID();
     }
+
     //wykonywane przez simulation co dnia, aktualnie cykl jedzenie i rozmnażania połączony
     public void doDay(){
-
         killsAnimals();
+        mapChanged("Kills");
         if(animals.isEmpty())
             run = false;
 
@@ -65,23 +78,20 @@ public class MainMap extends DayStatistics {
 
 
         cycleEatMulti();
+        mapChanged("EatAndMulti");
 
-        System.out.println("Mapa: "+ID);
-        for (Map.Entry<Vector2D, Set<Animal>> entry : animals.entrySet()) {
-            Vector2D position = entry.getKey();
-            Set<Animal> animalSet = entry.getValue();
-            System.out.println("Pozycja: " + position);
-            System.out.println("Zwierzęta: ");
-            for (Animal animal : animalSet) {
-                System.out.println("  " + animal);
-            }
-        }
+        growGrass(numberOfGrowing);
+        mapChanged("Grass");
     }
+
+
 
     private void generateStartAnimal(){
         RandomPositionGenerator rand = new RandomPositionGenerator(size.upperRight().getX(),size.upperRight().getY(),howMany);
         for (Vector2D position : rand) {
-            addAnimal(position, new Animal(position, new Dna(lenGen), startEnergy));
+            Dna dna = new Dna(lenGen);
+            addAnimal(position, new Animal(position, dna, startEnergy,energyToAdult));
+            addDna(dna);
         }
     }
 
@@ -99,8 +109,6 @@ public class MainMap extends DayStatistics {
         //Reproduce (też na liscie z move)
         //Grow (tak by nie rosło na tych na których jest)
 
-    //hashmap jest aktualizowana tak żeby iterować tylko po pozycjach gdzie coś jeszcze jest, hasset przechowuje jakie zwierzęta są na danym polu
-    //czy TreeSet się opłaca ? Jedzenie Reprodukcja a Ruchy usuwanie dodawanie
 
     //sprawdza czy mieści się w mapie
     public boolean canMoveTo(Vector2D pos) {
@@ -131,6 +139,8 @@ public class MainMap extends DayStatistics {
                 removeAnimal(animal.getPosition(), animal);
                 addAnimal(toPos, animal);
                 animal.move(toPos);//wykonuje przypisanie lokalizacji i zmiany codzienne zwierzaka
+                mapChanged("Move");
+                Thread.sleep(50);
             }
         }catch (Exception e){
             System.out.println();
@@ -201,7 +211,7 @@ public class MainMap extends DayStatistics {
                 oneEat(energyFromEat);
             }
 
-            if(strongest.getLast() != null && strongest.getLast().getEnergy() >= energyToAdult){
+            if(strongest.size()> 1 && strongest.getLast().getEnergy() >= energyToAdult){
                 multipl(strongest);
             }
         }
@@ -209,7 +219,7 @@ public class MainMap extends DayStatistics {
 
     //pobranie 2 najsliniejszych z pola lub jednego i null na index 2
     public List<Animal> getTwoStrongest(Vector2D pos){
-        List<Animal> list = new ArrayList<>(2);
+        List<Animal> list = new ArrayList<>();
         Set<Animal> values = animals.get(pos);
         TreeSet<Animal> treeSet = new TreeSet<Animal>(values);
         list.add(treeSet.removeFirst());
@@ -223,16 +233,30 @@ public class MainMap extends DayStatistics {
     private void multipl(List<Animal> animals){
         List<Integer> dnaList = new ArrayList<>(lenGen);
         try {
-            dnaList = animals.getFirst().multiplicationWith(animals.getLast());
+            dnaList = animals.getFirst().multiplicationWith(animals.getLast(),minMutation,maxMutation,isSwap);
             Dna dna = new Dna(dnaList, lenGen);
             animals.getFirst().multiplicationLostEnergy(energyForMulti);
             animals.getLast().multiplicationLostEnergy(energyForMulti);
-            Animal child = new Animal(animals.getFirst().getPosition(), dna, 2 * energyForMulti);
+            Animal child = new Animal(animals.getFirst().getPosition(), dna, 2 * energyForMulti,energyToAdult);
             addAnimal(child.getPosition(), child);
             child.addParent(animals.getFirst(),animals.getLast());
             changeNumberOfAnimals(true,child);
         }catch (IllegalArgumentException e){
             e.printStackTrace();
+        }
+    }
+
+    public void addObserver(MapObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(MapObserver observer) {
+        observers.remove(observer);
+    }
+
+    public void mapChanged(String message) {
+        for(MapObserver observer : observers){
+            observer.mapChanged(this,message);
         }
     }
 
@@ -266,9 +290,25 @@ public class MainMap extends DayStatistics {
         }
     }
 
+
+
     //AnimalsAt
     public Set<Animal> getAnimalsAt(Vector2D pos) {
         return animals.get(pos);
+    }
+
+    public Grass getGrassAt(Vector2D pos) {
+        return grasses.get(pos);
+    }
+
+    public Optional<MapObject> objectAt(Vector2D position) {
+        Optional<MapObject> result = Optional.empty();
+        if (animals.containsKey(position)){
+            result= Optional.ofNullable(animals.get(position).stream().findFirst().orElse(null));
+        }else{
+            result= Optional.ofNullable(grasses.get(position));
+        }
+        return result;
     }
 
     //isGrassAt
@@ -285,7 +325,7 @@ public class MainMap extends DayStatistics {
         //generowanie (pas 0-(sr-szer/2) i (sr+szer/2) - 20% a równik (sr+-szer) - 80%)
         int planted = 0;
 
-        while (planted < howMany) {
+        while (planted < howMany && getNumbersOfGrass() < numbersOfPlaces) {
             // czy trawa będzie na równiku
             double rand = Math.random(); // [0..1)
             Vector2D pos;
@@ -298,8 +338,16 @@ public class MainMap extends DayStatistics {
             if (!isGrassAt(pos)) {
                 grasses.put(pos, new Grass(pos, energyFromEat));
                 planted++;
+                changeGrass(1);
             }
         }
+    }
+
+    public Boundary getSize(){
+        return size;
+    }
+    public int getID(){
+        return ID;
     }
 
     @Override

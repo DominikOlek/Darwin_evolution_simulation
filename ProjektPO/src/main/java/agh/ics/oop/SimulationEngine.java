@@ -1,5 +1,7 @@
 package agh.ics.oop;
 
+import javafx.concurrent.Task;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,14 +20,12 @@ public class SimulationEngine {
             threadPool.submit(sim);
         }
         simList.clear();
-        //threadPool.shutdown();
-        //awaitSimulationsEnd();
     }
 
     public void awaitSimulationsEnd(){
         try{
             threadPool.shutdown();
-            if(!threadPool.awaitTermination(5, TimeUnit.SECONDS)){
+            if(!threadPool.awaitTermination(2, TimeUnit.SECONDS)){
                 threadPool.shutdownNow();
             }
         }catch (InterruptedException e) {
