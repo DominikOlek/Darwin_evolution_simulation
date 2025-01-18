@@ -2,7 +2,9 @@
 import agh.ics.oop.Models.Sprite.Animal;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.Vector2D;
+import javafx.application.Platform;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -77,6 +79,6 @@ public class Dna_Test {
     public void toStringTEST(){
         List<Integer> val = new ArrayList<Integer>(List.of(2,7,5,1,5,4,2,1,3,6));
         Dna dna = new Dna(val,10);
-        Assertions.assertEquals("Dna=[2, 7, 5, 1, 5, 4, 2, 1, 3, 6]" ,dna.toString());
+        Assertions.assertEquals("[2, 7, 5, 1, 5, 4, 2, 1, 3, 6]" ,dna.toString());
     }
 }

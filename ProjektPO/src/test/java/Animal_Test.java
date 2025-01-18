@@ -2,12 +2,18 @@ import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Sprite.Animal;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.Vector2D;
+import javafx.application.Platform;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 public class Animal_Test {
+    @BeforeAll
+    public static void initJavaFX() {
+        Platform.startup(() -> {}); // Inicjalizuje platformę JavaFX bez otwierania GUI
+    }
     @Test
     public void moveTEST(){
         Vector2D vector = new Vector2D(1,0);

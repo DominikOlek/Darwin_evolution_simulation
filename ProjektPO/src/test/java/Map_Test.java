@@ -5,7 +5,9 @@ import agh.ics.oop.Models.Utils.Boundary;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.MapSettings;
 import agh.ics.oop.Models.Utils.Vector2D;
+import javafx.application.Platform;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -15,15 +17,19 @@ import java.util.stream.Collectors;
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class Map_Test {
+    @BeforeAll
+    public static void initJavaFX() {
+        Platform.startup(() -> {}); // Inicjalizuje platformę JavaFX bez otwierania GUI
+    }
     @Test
     public void constructorAndCanMoveTEST() {
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
-        MapSettings set = new MapSettings(false,5, 0, 1, 5, 3, 0, 1,0, 20,0,7);
+        MapSettings set = new MapSettings(false,5, 0, 1, 5, 3, 1, 1,20, 20,0,false,false);
         MainMap map = new MainMap(size,set);
         Set<Animal> animals = map.copyCollection();
         Animal animal = animals.stream().findFirst().orElseThrow();
 
-        System.out.println(animals);
+
         Assertions.assertEquals(1,animals.size());
         Assertions.assertEquals(20,animal.getEnergy());
         Assertions.assertTrue(map.canMoveTo(new Vector2D(3,3)));
@@ -36,7 +42,7 @@ public class Map_Test {
     @Test
     public void addAndRemoveTEST() {
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
-        MapSettings set = new MapSettings(false,5, 0, 1, 5, 3, 0, 0,0, 20,0,7);
+        MapSettings set = new MapSettings(false,5, 1, 5, 3, 0, 0, 0,20, 0,0,false,false);
         MainMap mapa2 = new MainMap(size,set);
 
         Vector2D vector = new Vector2D(1,1);
@@ -68,7 +74,7 @@ public class Map_Test {
         //KILL
 
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
-        MapSettings set = new MapSettings(false,3, 0, 1, 5, 3, 0, 0,0, 20,0,7);
+        MapSettings set = new MapSettings(false,3, 1, 5, 3, 0, 0, 0,0, 20,0,false,false);
         MainMap mapa = new MainMap(size,set);
 
         Dna dna = new Dna(List.of(2,4,0),1);
