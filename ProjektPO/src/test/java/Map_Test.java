@@ -1,6 +1,8 @@
 import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Maps.MainMap;
+import agh.ics.oop.Models.Maps.WorldMapI;
 import agh.ics.oop.Models.Sprite.Animal;
+import agh.ics.oop.Models.Sprite.LiveObject;
 import agh.ics.oop.Models.Utils.Boundary;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.MapSettings;
@@ -13,7 +15,6 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class Map_Test {
@@ -25,9 +26,9 @@ public class Map_Test {
     public void constructorAndCanMoveTEST() {
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
         MapSettings set = new MapSettings(false,5, 0, 1, 5, 3, 1, 1,20, 20,0,false,false);
-        MainMap map = new MainMap(size,set);
-        Set<Animal> animals = map.copyCollection();
-        Animal animal = animals.stream().findFirst().orElseThrow();
+        WorldMapI map = new MainMap(size,set);
+        Set<LiveObject> animals = map.copyAnimalCollection();
+        LiveObject animal = animals.stream().findFirst().orElseThrow();
 
 
         Assertions.assertEquals(1,animals.size());
@@ -43,17 +44,17 @@ public class Map_Test {
     public void addAndRemoveTEST() {
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
         MapSettings set = new MapSettings(false,5, 1, 5, 3, 0, 0, 0,20, 0,0,false,false);
-        MainMap mapa2 = new MainMap(size,set);
+        WorldMapI mapa2 = new MainMap(size,set);
 
         Vector2D vector = new Vector2D(1,1);
         Dna dna = new Dna(List.of(0,1,2,3,4),5);
-        Animal animal = new Animal(vector,dna,20);
+        LiveObject animal = new Animal(vector,dna,20);
 
         Assertions.assertTrue(mapa2.addAnimal(vector,animal));
 
         Vector2D vector2 = new Vector2D(1,1);
         Dna dna2 = new Dna(List.of(0,1,2,3),4);
-        Animal animal2 = new Animal(vector2,dna2,20);
+        LiveObject animal2 = new Animal(vector2,dna2,20);
 
         Assertions.assertFalse(mapa2.addAnimal(vector2,animal2));
 
@@ -75,21 +76,21 @@ public class Map_Test {
 
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(5,5));
         MapSettings set = new MapSettings(false,3, 1, 5, 3, 0, 0, 0,0, 20,0,false,false);
-        MainMap mapa = new MainMap(size,set);
+        WorldMapI mapa = new MainMap(size,set);
 
         Dna dna = new Dna(List.of(2,4,0),1);
-        Animal animal = new Animal(new Vector2D(1,1),dna,1);
+        LiveObject animal = new Animal(new Vector2D(1,1),dna,1);
         mapa.addAnimal(animal.getPosition(),animal);
 
         Dna dna2 = new Dna(List.of(0,2,5),1);
-        Animal animal2 = new Animal(new Vector2D(0,4),dna2,0);
+        LiveObject animal2 = new Animal(new Vector2D(0,4),dna2,0);
         mapa.addAnimal(animal2.getPosition(),animal2);
 
-        Assertions.assertEquals(2,mapa.copyCollection().size());
+        Assertions.assertEquals(2,mapa.copyAnimalCollection().size());
         mapa.doDay();
-        Assertions.assertEquals(1,mapa.copyCollection().size());
+        Assertions.assertEquals(1,mapa.copyAnimalCollection().size());
         mapa.doDay();
-        Assertions.assertEquals(0,mapa.copyCollection().size());
+        Assertions.assertEquals(0,mapa.copyAnimalCollection().size());
 
         //MOVE
 
@@ -174,9 +175,9 @@ public class Map_Test {
         Assertions.assertEquals(3,mapa.getAnimalsAt(new Vector2D(1,2)).size());
         Assertions.assertEquals(6,animal.getEnergy());
         Assertions.assertEquals(6,animal2.getEnergy());
-        Animal finalAnimal = animal;
-        Animal finalAnimal1 = animal2;
-        Animal child = mapa.getAnimalsAt(new Vector2D(1,2)).stream().filter(an -> an.equals(finalAnimal) || an.equals(finalAnimal1)).toList().getFirst();
+        LiveObject finalAnimal = animal;
+        LiveObject finalAnimal1 = animal2;
+        LiveObject child = mapa.getAnimalsAt(new Vector2D(1,2)).stream().filter(an -> an.equals(finalAnimal) || an.equals(finalAnimal1)).toList().getFirst();
         Assertions.assertEquals(6,child.getEnergy());
         Assertions.assertEquals(1,animal.getNumberOfChild());
         Assertions.assertEquals(1,animal2.getNumberOfChild());
@@ -192,7 +193,7 @@ public class Map_Test {
         mapa.addAnimal(animal2.getPosition(),animal2);
 
         Dna dna3 = new Dna(List.of(2,0,0),1);
-        Animal animal3 = new Animal(new Vector2D(0,2),dna3,10);
+        LiveObject animal3 = new Animal(new Vector2D(0,2),dna3,10);
         mapa.addAnimal(animal3.getPosition(),animal3);
 
         mapa.doDay();

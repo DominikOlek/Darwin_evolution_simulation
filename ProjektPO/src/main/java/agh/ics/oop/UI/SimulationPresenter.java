@@ -1,23 +1,20 @@
 package agh.ics.oop.UI;
 
-import agh.ics.oop.Main;
 import agh.ics.oop.Models.Maps.MainMap;
-import agh.ics.oop.Models.Sprite.Animal;
-import agh.ics.oop.Models.Sprite.Grass;
+import agh.ics.oop.Models.Maps.WorldMapI;
+import agh.ics.oop.Models.Sprite.LiveObject;
 import agh.ics.oop.Models.Sprite.MapObject;
 import agh.ics.oop.Models.Utils.AnimalStatistics;
 import agh.ics.oop.Models.Utils.Boundary;
 import agh.ics.oop.Models.Utils.MapObserver;
 import agh.ics.oop.Models.Utils.Vector2D;
-import agh.ics.oop.Simulation;
+import agh.ics.oop.Simulation.Simulation;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
@@ -27,7 +24,6 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.scene.text.Text;
 
-import javax.swing.*;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -42,7 +38,7 @@ public class SimulationPresenter implements MapObserver {
     MainMap worldMap;
     Simulation simulation;
     AnimalStatistics animalStatistics = new AnimalStatistics(this);
-    Animal animal;
+    LiveObject animal;
     Popup popup = new Popup();
     Stage primaryStage;
 
@@ -64,7 +60,7 @@ public class SimulationPresenter implements MapObserver {
             System.out.println("Simulation interrupted");
         }
     }
-    private void setPop(double x, double y,Set<Animal> animals) {
+    private void setPop(double x, double y,Set<LiveObject> animals) {
         popup.getContent().clear();
         popup.setAutoHide(true);
 
@@ -74,7 +70,7 @@ public class SimulationPresenter implements MapObserver {
         popupContent.getChildren().addAll(
                 new Label("Select: ")
         );
-        for (Animal ani : animals) {
+        for (LiveObject ani : animals) {
             Label lab = new Label("Animal "+ani.getCurrentDay()+" old");
             lab.setOnMouseClicked(e -> {
                 if (animal != null) animal.removeObserver();
@@ -93,7 +89,7 @@ public class SimulationPresenter implements MapObserver {
 
     public void setWorldMap(MainMap worldMap) {
         this.worldMap = worldMap;
-        ID.setText("Mapa o ID: "+worldMap.getID());
+        ID.setText("Mapa o ID: "+worldMap.getID() + " Dzień: "+worldMap.getCurrentDay());
     }
     public void setSimulation(Simulation simulation) {this.simulation = simulation;}
     @FXML
@@ -114,8 +110,9 @@ public class SimulationPresenter implements MapObserver {
         popup.getContent().clear();
     }
 
-    public void drawLayout(){
+    private void drawLayout(){
         try {
+            ID.setText("Mapa o ID: "+worldMap.getID() + " Dzień: "+worldMap.getCurrentDay());
             Boundary size = worldMap.getSize();
             int sizeX = size.upperRight().getX() - size.lowerLeft().getX();
             int sizeY = size.upperRight().getY() - size.lowerLeft().getY();
@@ -135,9 +132,9 @@ public class SimulationPresenter implements MapObserver {
                             lab = new Label(realX + "");
                         } else {
                             Vector2D pos = new Vector2D(realX, realY);
-                            Set<Animal> atPos = worldMap.getAnimalsAt(pos);
+                            Set<LiveObject> atPos = worldMap.getAnimalsAt(pos);
                             if (atPos != null) {
-                                Animal animalatPos = atPos.stream().findFirst().get();
+                                LiveObject animalatPos = atPos.stream().findFirst().get();
                                 WorldElementBox box = animalatPos.getGraph();
                                 box.setLabel("" + atPos.size());
                                 vbox = box.get();
@@ -154,7 +151,7 @@ public class SimulationPresenter implements MapObserver {
                                     });
                                 }
                             } else {
-                                Grass grass = worldMap.getGrassAt(pos);
+                                MapObject grass = worldMap.getGrassAt(pos);
                                 if (grass != null) {
                                     vbox = grass.getGraph().get();
                                 } else {
@@ -172,16 +169,7 @@ public class SimulationPresenter implements MapObserver {
         }
     }
 
-    @Override
-    public void mapChanged(MainMap worldMap, String message) {
-        Platform.runLater(() -> {
-            clearGrid();
-            drawLayout();
-            getMapStat();
-        });
-    }
-
-    public void getMapStat(){
+    private void getMapStat(){
         if (!dayStat.getChildren().isEmpty()) {
             dayStat.getChildren().retainAll(dayStat.getChildren().getFirst());
             dayStat.getColumnConstraints().clear();
@@ -200,14 +188,14 @@ public class SimulationPresenter implements MapObserver {
                 animalStat.getRowConstraints().clear();
             }
 
-            Map<String, String> stat = animalStatistics.getData();
+            Map<String, String> stat = animalStatistics.getStatistics();
 
             setDataToArray(animalStat,stat);
         });
 
     }
 
-    public void setDataToArray(GridPane pane,Map<String, String> stat){
+    private void setDataToArray(GridPane pane,Map<String, String> stat){
         int row = 0;
         for (Map.Entry<String, String> entry : stat.entrySet()) {
             Text keyText = new Text(entry.getKey());
@@ -224,7 +212,17 @@ public class SimulationPresenter implements MapObserver {
         }
     }
 
-    public void changeState(ActionEvent actionEvent) {
+    @Override
+    public void mapChanged(WorldMapI worldMap, String message) {
+        Platform.runLater(() -> {
+            clearGrid();
+            drawLayout();
+            getMapStat();
+        });
+    }
+
+    @FXML
+    private void changeState(ActionEvent actionEvent) {
         try {
             if (Objects.equals(changeStateBtn.getText(), "Pause")) {
                 simulation.pause();

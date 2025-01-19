@@ -10,7 +10,7 @@ import static java.lang.Math.sqrt;
 public class Dna {
     private List<Integer> value = new ArrayList<Integer>();
     private int actual = 0;
-    private int size ;
+    private final int size ;
 
     public Dna(int size) {
         this.size = size;
@@ -74,15 +74,15 @@ public class Dna {
     private int getRandom(int from,int to){
         return from + (int) Math.floor(Math.random()* to);
     }
-
-
     public void nextDay(){
         actual = (actual+1)%value.size();
     }
     public int getActual() {
         return value.get(actual);
     }
-    public int getSize() {return value.size();}
+    public int getSize() {
+        return value.size();
+    }
 
     @Override
     public String toString() {

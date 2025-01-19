@@ -1,5 +1,6 @@
 import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Sprite.Animal;
+import agh.ics.oop.Models.Sprite.LiveObject;
 import agh.ics.oop.Models.Utils.Dna;
 import agh.ics.oop.Models.Utils.Vector2D;
 import javafx.application.Platform;
@@ -18,7 +19,7 @@ public class Animal_Test {
     public void moveTEST(){
         Vector2D vector = new Vector2D(1,0);
         Dna dna = new Dna(List.of(1,4),1); //size 1 znaczy tutaj że losowanie zawsze wybierze 1 jako początkowe ustawienie
-        Animal animal = new Animal(vector,dna,2);
+        LiveObject animal = new Animal(vector,dna,2);
 
         Assertions.assertEquals(MapDirection.NORTHEAST,animal.getDirection());
 
@@ -74,7 +75,7 @@ public class Animal_Test {
     public void multiplicationTEST(){
         Vector2D vector = new Vector2D(1,0);
         Dna dna = new Dna(List.of(4,3,2,1,0),5);
-        Animal animal = new Animal(vector,dna,2);
+        LiveObject animal = new Animal(vector,dna,2);
 
         Vector2D vector2 = new Vector2D(1,0);
         Dna dna2 = new Dna(List.of(7,6,5,4,3),5);

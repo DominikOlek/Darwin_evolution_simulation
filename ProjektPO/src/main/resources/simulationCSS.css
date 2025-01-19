@@ -12,3 +12,9 @@
 ScrollPane{
     -fx-font-size: 8pt;
 }
+
+.slider {
+    -fx-snap-to-ticks: true;
+    -fx-major-tick-unit: 1;
+    -fx-minor-tick-count: 0;
+}

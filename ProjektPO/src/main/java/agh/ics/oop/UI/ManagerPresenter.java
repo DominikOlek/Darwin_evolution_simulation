@@ -1,13 +1,14 @@
 package agh.ics.oop.UI;
 
-import agh.ics.oop.Main;
 import agh.ics.oop.Models.Maps.MainMap;
+import agh.ics.oop.Models.Maps.WorldMapI;
 import agh.ics.oop.Models.Utils.Boundary;
 import agh.ics.oop.Models.Utils.DayStatisticsExport;
 import agh.ics.oop.Models.Utils.MapSettings;
 import agh.ics.oop.Models.Utils.Vector2D;
-import agh.ics.oop.Simulation;
-import agh.ics.oop.SimulationEngine;
+import agh.ics.oop.Simulation.Simulation;
+import agh.ics.oop.Simulation.SimulationEngine;
+import agh.ics.oop.Simulation.StartSimulation;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,21 +25,19 @@ import javafx.stage.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManagerPresenter {
+public class ManagerPresenter extends StartSimulation {
     private static final double CELL_WIDTH = 30;
     private static final double CELL_HEIGHT = 30;
-    MainMap worldMap;
-    List<Simulation> simList = new ArrayList<>();
-    SimulationEngine engine = new SimulationEngine(simList);
-    DayStatisticsExport exporter = new DayStatisticsExport();
+    WorldMapI worldMap;
 
-    public void setWorldMap(MainMap worldMap) {
+    public void setWorldMap(WorldMapI worldMap) {
         this.worldMap = worldMap;
     }
 
     public void setPrimaryStage(Stage primaryStage) {
         primaryStage.setOnCloseRequest(this::handleCloseRequest);
         primaryStage.setTitle("Manager");
+
     }
 
     private void handleCloseRequest(WindowEvent event) {
@@ -98,14 +97,14 @@ public class ManagerPresenter {
         });
 
         widthSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            startAnimalSlider.setMax(widthSlider.getValue()*heightSlider.getValue());
-            startGrassSlider.setMax(widthSlider.getValue()*heightSlider.getValue());
-            growGrassSlider.setMax(widthSlider.getValue()*heightSlider.getValue());
+            startAnimalSlider.setMax((newVal.intValue()*heightSlider.getValue())-1);
+            startGrassSlider.setMax((newVal.intValue()*heightSlider.getValue())-1);
+            growGrassSlider.setMax((newVal.intValue()*heightSlider.getValue())-1);
         });
         heightSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            startAnimalSlider.setMax(widthSlider.getValue()*heightSlider.getValue());
-            startGrassSlider.setMax(widthSlider.getValue()*heightSlider.getValue());
-            growGrassSlider.setMax(widthSlider.getValue()*heightSlider.getValue());
+            startAnimalSlider.setMax((widthSlider.getValue()*newVal.intValue())-1);
+            startGrassSlider.setMax((widthSlider.getValue()*newVal.intValue())-1);
+            growGrassSlider.setMax((widthSlider.getValue()*newVal.intValue())-1);
         });
 
         adultEnergySlider.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -139,43 +138,8 @@ public class ManagerPresenter {
             Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(width,height));
             MapSettings settings = new MapSettings(whichMutation.isSelected(), lenGen, energyFromEat, adultEnergy, multiEnergy, startGrass, startAnimals ,growGrass, startEnergy, minMutation, maxMutation,whichGrow.isSelected(),save.isSelected());
             resultLabel.setText("Utworzono");
+
             onSimulationStartClicked(size,settings);
-        }
-    }
-
-    public void onSimulationStartClicked(Boundary size,MapSettings settings) {
-        try {
-
-            try {
-                FXMLLoader loader = new FXMLLoader();
-                loader.setLocation(getClass().getClassLoader().getResource("simulation.fxml"));
-                BorderPane root1 = loader.load();
-                Stage stage = new Stage();
-                stage.setScene(new Scene(root1));
-                SimulationPresenter presenter = loader.getController();
-
-                MainMap map = new MainMap(size,settings);
-                map.addObserver(presenter);
-                presenter.setWorldMap(map);
-                presenter.setPrimaryStage(stage);
-                Simulation newSimulation;
-                if(settings.saveToFile()){
-                    newSimulation = new Simulation(map,exporter);
-                }else{
-                    newSimulation = new Simulation(map,null);
-                }
-                presenter.setSimulation(newSimulation);
-                simList.add(newSimulation);
-                engine.runAsyncInThreadPool();
-                stage.show();
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-
-        }catch(IllegalArgumentException e){
-            System.out.println("User bad request: "+e.getMessage());
-            Platform.runLater(() -> {moveLabel.setText(e.getMessage());});
-            return;
         }
     }
 

@@ -25,7 +25,7 @@
                 <children>
                 <VBox spacing="5">
                     <Label text="Width:" />
-                    <Slider fx:id="widthSlider" min="2" max="30" value="10"/>
+                    <Slider fx:id="widthSlider" min="2" max="30" value="10" />
                     <Label fx:id="widthLabel" text="10"/>
                 </VBox>
 
@@ -50,7 +50,7 @@
 
                 <VBox spacing="5">
                     <Label text="Length Gen:" />
-                    <Slider fx:id="lenGenSlider" min="0" max="1000" value="50"/>
+                    <Slider fx:id="lenGenSlider" min="0" max="200" value="50"/>
                     <Label fx:id="lenGenLabel" text="50"/>
                 </VBox>
 

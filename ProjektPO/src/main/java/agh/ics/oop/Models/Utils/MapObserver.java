@@ -1,7 +1,7 @@
 package agh.ics.oop.Models.Utils;
 
-import agh.ics.oop.Models.Maps.MainMap;
+import agh.ics.oop.Models.Maps.WorldMapI;
 
 public interface MapObserver {
-    void mapChanged(MainMap worldMap, String message);
+    public void mapChanged(WorldMapI worldMap, String message);
 }

@@ -1,6 +1,4 @@
-package agh.ics.oop;
-
-import javafx.concurrent.Task;
+package agh.ics.oop.Simulation;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

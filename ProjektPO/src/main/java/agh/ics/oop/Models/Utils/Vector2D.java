@@ -27,22 +27,6 @@ public class Vector2D {
         return new Vector2D(x + other.x, y + other.y);
     }
 
-    public Vector2D subtract(Vector2D other){
-        return new Vector2D(x - other.x, y - other.y);
-    }
-
-    public Vector2D upperRight(Vector2D other){
-        return new Vector2D(Integer.max(x,other.x),Integer.max(y,other.y));
-    }
-
-    public Vector2D lowerLeft(Vector2D other){
-        return new Vector2D(Integer.min(x,other.x),Integer.min(y,other.y));
-    }
-
-    public Vector2D opposite(){
-        return new Vector2D(-x,-y);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

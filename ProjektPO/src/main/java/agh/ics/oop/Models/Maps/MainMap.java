@@ -2,123 +2,66 @@ package agh.ics.oop.Models.Maps;
 
 import agh.ics.oop.Models.Sprite.Animal;
 import agh.ics.oop.Models.Sprite.Grass;
+import agh.ics.oop.Models.Sprite.LiveObject;
 import agh.ics.oop.Models.Sprite.MapObject;
 import agh.ics.oop.Models.Utils.*;
+import javafx.scene.control.RadioMenuItem;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import static java.lang.Math.sqrt;
-
-public class MainMap extends DayStatistics {
+public class MainMap extends WorldMap {
     //mapa pozwoli jednostkowo dostać się do elementów na polu, hashset do konkretnego elementu w nim i można też po nim iterować
-    private final Map<Vector2D, Set<Animal>> animals = new HashMap<Vector2D, Set<Animal>>();
-    private final Map<Vector2D, Grass> grasses = new HashMap<Vector2D, Grass>();
+    private final Map<Vector2D, Set<LiveObject>> animals = new HashMap<Vector2D, Set<LiveObject>>();
+    private final Map<Vector2D, MapObject> grasses = new HashMap<Vector2D, MapObject>();
     private final List<MapObserver> observers = new ArrayList<MapObserver>();
-
-    private int currentDay =0;
-
-    private final int startGrassNumber;
-    private final int numberOfGrowing;
-    private final int lenGen;
-    private final int energyFromEat;
-    private final int growForDay;
-    private final int energyToAdult;
-    private final int energyForMulti;
-    private final int startEnergy;
-    private final int howMany;
-    private final int minMutation;
-    private final int maxMutation;
-
-    private final int ID;
-
-    private Boundary size;
-    private int equator;
-    private int equatorHeight;
+    private final MapSettings settings;
+    private final Boundary size;
+    private final int equator;
+    private final int equatorHeight;
     private boolean run = true;
-    private boolean isSwap = false;
 
     //MapSettings - wszystkie opcje jakie będą ustawiane
     public MainMap(Boundary size, MapSettings settings) {
-        this.startGrassNumber = settings.startGrassNumber();
+        super();
+        this.settings = settings;
         this.size = size;
-        this.numberOfGrowing = settings.numberOfGrowing();
         this.equator = size.upperRight().getY()/2;
         this.equatorHeight = size.upperRight().getY()/5;
 
-        this.lenGen = settings.lenGen();
-        this.energyFromEat = settings.energyFromEat();
-        this.growForDay = settings.numberOfGrowing();
-        this.energyToAdult = settings.energyToAdult();
-        this.energyForMulti = settings.energyForMulti();
-        this.startEnergy = settings.startEnergy();
-        this.howMany = settings.startAnimalNumber();
-        this.minMutation = settings.minMutation();
-        this.maxMutation = settings.maxMutation();
-        this.isSwap = settings.whichMutation();
         generateStartAnimal();
         setSurface(size);
-        setStartEnergy(howMany,startEnergy);
+        setStartEnergy(settings.startAnimalNumber(),settings.startEnergy());
         growGrass(settings.startGrassNumber());
-
-
-        ID = GenerateID.GetID();
     }
+    //runDay
+    //Kill
+    //Move (wykonywany dla każdego zwierzaka z małmi przerwami)
+    //Eat (wykonywany nie na liscie zwierząt tylko pozycji z move)
+    //Reproduce (też na liscie z move)
+    //Grow
 
     //wykonywane przez simulation co dnia, aktualnie cykl jedzenie i rozmnażania połączony
+    @Override
     public void doDay(){
         killsAnimals();
         mapChanged("Kills");
         if(animals.isEmpty())
             run = false;
 
-        moveTo(copyCollection());
+        moveTo(copyAnimalCollection());
         allMove();
-
 
         cycleEatMulti();
         mapChanged("EatAndMulti");
 
-        growGrass(numberOfGrowing);
+        growGrass(settings.numberOfGrowing());
         mapChanged("Grass");
+        currentDay++;
     }
 
-
-
-    private void generateStartAnimal(){
-        RandomPositionGenerator rand = new RandomPositionGenerator(size.upperRight().getX(),size.upperRight().getY(),howMany);
-        for (Vector2D position : rand) {
-            Dna dna = new Dna(lenGen);
-            addAnimal(position, new Animal(position, dna, startEnergy,energyToAdult));
-            addDna(dna);
-        }
-    }
-
-    public Set<Animal> copyCollection(){
-        Set<Animal> AllObj = new HashSet<>();
-        for(Set<Animal> set:animals.values()) AllObj.addAll(set);
-        return AllObj;
-    }
-
-
-    //runDay
-        //Kill
-        //Move (na tej podstawie stworzyć tabele z pozycjami w danym kroku)
-        //Eat (wykonywany nie na liscie zwierząt tylko pozycji z move)
-        //Reproduce (też na liscie z move)
-        //Grow (tak by nie rosło na tych na których jest)
-
-
-    //sprawdza czy mieści się w mapie
-    public boolean canMoveTo(Vector2D pos) {
-        return (size.lowerLeft().precedes(pos) && size.upperRight().follows(pos));
-    }
-
-    //porusza zwierzakiem na podstawie jego obrotu
-    public void moveTo(Set<Animal> AllAnimals) {
+    private void moveTo(Set<LiveObject> AllAnimals) {
         try {
-            for(Animal animal:AllAnimals){
+            for(LiveObject animal:AllAnimals){
                 Vector2D toPos = animal.getPosition().add(animal.getDirection().toUnitVector());
                 boolean status = false;
                 if (!canMoveTo(toPos)) {
@@ -147,43 +90,17 @@ public class MainMap extends DayStatistics {
         }
     }
 
-    public boolean addAnimal(Vector2D pos, Animal animal) {
-        if (animal.getEnergy()<0 || animal.getDna().getSize() != lenGen)
-            return false;
-        // computeIfAbsent tworzy nowy HashSet, jeśli jeszcze nie istnieje
-        if(!animals.containsKey(pos)){
-            changeNumberOfUsePlaces(1);
-        }
-        animals.computeIfAbsent(pos, k -> new HashSet<>()).add(animal);
-        return true;
-    }
-
-    //usuwanie zwierzaka i hashseta gdy trzeba
-    public boolean removeAnimal(Vector2D pos, Animal animal) {
-        if (animals.containsKey(pos)) {
-            boolean status = false;
-            Set<Animal> set = animals.get(pos);
-            status = set.remove(animal);
-            if (set.isEmpty()) {
-                animals.remove(pos);
-                changeNumberOfUsePlaces(-1);
-            }
-            return status;
-        }else
-            return false;
-    }
-
     //iteruje i usuwa  zwierzaki z energia == 0
     private void killsAnimals(){
-        Iterator<Map.Entry<Vector2D, Set<Animal>>> iteratMap = animals.entrySet().iterator();
+        Iterator<Map.Entry<Vector2D, Set<LiveObject>>> iteratMap = animals.entrySet().iterator();
 
         while (iteratMap.hasNext()) {
-            Map.Entry<Vector2D, Set<Animal>> set = iteratMap.next();
-            Set<Animal> values = set.getValue();
-            Iterator<Animal> iteratSet = values.iterator();
+            Map.Entry<Vector2D, Set<LiveObject>> set = iteratMap.next();
+            Set<LiveObject> values = set.getValue();
+            Iterator<LiveObject> iteratSet = values.iterator();
 
             while (iteratSet.hasNext()) {
-                Animal anim = iteratSet.next();
+                LiveObject anim = iteratSet.next();
                 if (anim.getEnergy() <= 0) {
                     iteratSet.remove();
                     anim.isDead();
@@ -200,28 +117,28 @@ public class MainMap extends DayStatistics {
 
     //wykonanie cyklu dla każdego pola, sprawdzenie czy można zjeść i się rozmnożyć
     private void cycleEatMulti(){
-        for(Map.Entry<Vector2D, Set<Animal>> animal : animals.entrySet()) {
+        for(Map.Entry<Vector2D, Set<LiveObject>> animal : animals.entrySet()) {
             if(animal.getValue().size() == 1 && !isGrassAt(animal.getKey())) {
                 continue;
             }
-            List<Animal> strongest = getTwoStrongest(animal.getKey());
+            List<LiveObject> strongest = getTwoStrongest(animal.getKey());
             if(isGrassAt(animal.getKey())){
-                strongest.getFirst().eat(energyFromEat);
+                strongest.getFirst().eat(settings.energyFromEat());
                 grasses.remove(animal.getKey());
-                oneEat(energyFromEat);
+                oneEat(settings.energyFromEat());
             }
 
-            if(strongest.size()> 1 && strongest.getLast().getEnergy() >= energyToAdult){
+            if(strongest.size()> 1 && strongest.getLast().getEnergy() >= settings.energyToAdult()){
                 multipl(strongest);
             }
         }
     }
 
     //pobranie 2 najsliniejszych z pola lub jednego i null na index 2
-    public List<Animal> getTwoStrongest(Vector2D pos){
-        List<Animal> list = new ArrayList<>();
-        Set<Animal> values = animals.get(pos);
-        TreeSet<Animal> treeSet = new TreeSet<Animal>(values);
+    private List<LiveObject> getTwoStrongest(Vector2D pos){
+        List<LiveObject> list = new ArrayList<>();
+        Set<LiveObject> values = animals.get(pos);
+        TreeSet<LiveObject> treeSet = new TreeSet<LiveObject>(values);
         list.add(treeSet.removeFirst());
         if(!treeSet.isEmpty()){
             list.add(treeSet.removeFirst());
@@ -230,31 +147,33 @@ public class MainMap extends DayStatistics {
     }
 
     //stworzenie nowego potomka
-    private void multipl(List<Animal> animals){
-        List<Integer> dnaList = new ArrayList<>(lenGen);
+    private void multipl(List<LiveObject> animals){
+        List<Integer> dnaList;
         try {
-            dnaList = animals.getFirst().multiplicationWith(animals.getLast(),minMutation,maxMutation,isSwap);
-            Dna dna = new Dna(dnaList, lenGen);
-            animals.getFirst().multiplicationLostEnergy(energyForMulti);
-            animals.getLast().multiplicationLostEnergy(energyForMulti);
-            Animal child = new Animal(animals.getFirst().getPosition(), dna, 2 * energyForMulti,energyToAdult);
+            dnaList = animals.getFirst().multiplicationWith(animals.getLast(),settings.minMutation(),settings.maxMutation(),settings.whichMutation());
+            Dna dna = new Dna(dnaList, settings.lenGen());
+            animals.getFirst().multiplicationLostEnergy(settings.energyForMulti());
+            animals.getLast().multiplicationLostEnergy(settings.energyForMulti());
+            LiveObject child = new Animal(animals.getFirst().getPosition(), dna, 2 * settings.energyForMulti(),settings.energyToAdult());
             addAnimal(child.getPosition(), child);
             child.addParent(animals.getFirst(),animals.getLast());
             changeNumberOfAnimals(true,child);
         }catch (IllegalArgumentException e){
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
-    public void addObserver(MapObserver observer) {
-        observers.add(observer);
+
+    private void generateStartAnimal(){
+        RandomPositionGenerator rand = new RandomPositionGenerator(size.upperRight().getX(),size.upperRight().getY(),settings.startAnimalNumber());
+        for (Vector2D position : rand) {
+            Dna dna = new Dna(settings.lenGen());
+            addAnimal(position, new Animal(position, dna, settings.startEnergy(),settings.energyToAdult()));
+            addDna(dna);
+        }
     }
 
-    public void removeObserver(MapObserver observer) {
-        observers.remove(observer);
-    }
-
-    public void mapChanged(String message) {
+    private void mapChanged(String message) {
         for(MapObserver observer : observers){
             observer.mapChanged(this,message);
         }
@@ -290,41 +209,11 @@ public class MainMap extends DayStatistics {
         }
     }
 
-
-
-    //AnimalsAt
-    public Set<Animal> getAnimalsAt(Vector2D pos) {
-        return animals.get(pos);
-    }
-
-    public Grass getGrassAt(Vector2D pos) {
-        return grasses.get(pos);
-    }
-
-    public Optional<MapObject> objectAt(Vector2D position) {
-        Optional<MapObject> result = Optional.empty();
-        if (animals.containsKey(position)){
-            result= Optional.ofNullable(animals.get(position).stream().findFirst().orElse(null));
-        }else{
-            result= Optional.ofNullable(grasses.get(position));
-        }
-        return result;
-    }
-
-    //isGrassAt
-    public boolean isGrassAt(Vector2D pos) {
-        return grasses.containsKey(pos);
-    }
-
-    public boolean checkRun(){
-        return run;
-    }
-
     public void growGrass(int howMany){
+        int toGood = howMany/5;
         //int toGood = howMany/5;
         //generowanie (pas 0-(sr-szer/2) i (sr+szer/2) - 20% a równik (sr+-szer) - 80%)
         int planted = 0;
-
         while (planted < howMany && getNumbersOfGrass() < numbersOfPlaces) {
             // czy trawa będzie na równiku
             double rand = Math.random(); // [0..1)
@@ -334,20 +223,92 @@ public class MainMap extends DayStatistics {
             } else {
                 pos = randomOutsideEquatorPosition();
             }
-
             if (!isGrassAt(pos)) {
-                grasses.put(pos, new Grass(pos, energyFromEat));
-                planted++;
+                grasses.put(pos, new Grass(pos, settings.energyFromEat()));
                 changeGrass(1);
+                planted++;
             }
         }
     }
 
+    @Override
+    public Set<LiveObject> copyAnimalCollection(){
+        Set<LiveObject> AllObj = new HashSet<>();
+        for(Set<LiveObject> set:animals.values()) AllObj.addAll(set);
+        return AllObj;
+    }
+
+
+    @Override
+    public boolean canMoveTo(Vector2D pos) {
+        return (size.lowerLeft().precedes(pos) && size.upperRight().follows(pos));
+    }
+
+    //porusza zwierzakiem na podstawie jego obrotu
+
+    @Override
+    public boolean addAnimal(Vector2D pos, LiveObject animal) {
+        if (animal.getEnergy()<0 || animal.getDna().getSize() != settings.lenGen())
+            return false;
+        // computeIfAbsent tworzy nowy HashSet, jeśli jeszcze nie istnieje
+        if(!animals.containsKey(pos)){
+            changeNumberOfUsePlaces(1);
+        }
+        animals.computeIfAbsent(pos, k -> new HashSet<>()).add(animal);
+        return true;
+    }
+
+    //usuwanie zwierzaka i hashseta gdy trzeba
+    @Override
+    public boolean removeAnimal(Vector2D pos, LiveObject animal) {
+        if (animals.containsKey(pos)) {
+            boolean status = false;
+            Set<LiveObject> set = animals.get(pos);
+            status = set.remove(animal);
+            if (set.isEmpty()) {
+                animals.remove(pos);
+                changeNumberOfUsePlaces(-1);
+            }
+            return status;
+        }else
+            return false;
+    }
+
+    @Override
+    public void addObserver(MapObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(MapObserver observer) {
+        observers.remove(observer);
+    }
+
+    //AnimalsAt
+    @Override
+    public Set<LiveObject> getAnimalsAt(Vector2D pos) {
+        return animals.get(pos);
+    }
+
+    @Override
+    public MapObject getGrassAt(Vector2D pos) {
+        return grasses.get(pos);
+    }
+
+    //isGrassAt
+    @Override
+    public boolean isGrassAt(Vector2D pos) {
+        return grasses.containsKey(pos);
+    }
+
+    @Override
+    public boolean checkRun(){
+        return run;
+    }
+
+    @Override
     public Boundary getSize(){
         return size;
-    }
-    public int getID(){
-        return ID;
     }
 
     @Override

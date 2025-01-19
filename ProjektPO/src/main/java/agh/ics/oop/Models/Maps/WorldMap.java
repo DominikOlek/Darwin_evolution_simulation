@@ -1,11 +1,15 @@
-package agh.ics.oop.Models.Utils;
+package agh.ics.oop.Models.Maps;
 
-import agh.ics.oop.Models.Sprite.Animal;
+import agh.ics.oop.Models.Sprite.StatisticalObject;
+import agh.ics.oop.Models.Utils.Boundary;
+import agh.ics.oop.Models.Utils.Dna;
+import agh.ics.oop.Models.Utils.GenerateID;
+import agh.ics.oop.Models.Utils.StatisticReport;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class DayStatistics {
+public abstract class WorldMap implements StatisticReport, WorldMapI {
     private int numberOfAnimalsLife = 0;
     private int numberOfAnimalsDead = 0;
     private int numbersOfGrass = 0;
@@ -14,8 +18,14 @@ public abstract class DayStatistics {
     private float allLifeTime = 0;
     private float allNumberOfChildren = 0;
     private int numberOfUsePlaces = 0;
+    protected int currentDay = 1;
+    private final int ID;
 
-    private Map<Dna,Integer> countDna =  new HashMap<Dna,Integer>();
+    public WorldMap(){
+        ID = GenerateID.GetID();
+    }
+
+    private final Map<Dna,Integer> countDna =  new HashMap<Dna,Integer>();
 
     protected void setSurface(Boundary boundary) {
         numbersOfPlaces = (boundary.upperRight().getX()-boundary.lowerLeft().getX() +1 ) * (boundary.upperRight().getY()-boundary.lowerLeft().getY() +1);
@@ -30,7 +40,7 @@ public abstract class DayStatistics {
         numberOfUsePlaces += howMany;
     }
 
-    protected void changeNumberOfAnimals(boolean isBorn, Animal animal) {
+    protected void changeNumberOfAnimals(boolean isBorn, StatisticalObject animal) {
         if (isBorn) {
             this.numberOfAnimalsLife++;
             allNumberOfChildren+=2;
@@ -44,7 +54,11 @@ public abstract class DayStatistics {
     }
 
     protected void addDna(Dna dna) {
-        countDna.compute(dna, (k, a) -> countDna.containsKey(dna) ? a + 1 : 1);
+        try {
+            countDna.compute(dna, (k, a) -> countDna.containsKey(dna) ? a + 1 : 1);
+        }catch (NullPointerException e) {
+            System.out.println("DNA not found");
+        }
     }
 
     protected void changeGrass(int number){
@@ -87,10 +101,16 @@ public abstract class DayStatistics {
     public List<Map.Entry<Dna,Integer>> getTopDna(int howMany) {
         if (howMany <0)
             return null;
-        PriorityQueue<Map.Entry<Dna,Integer>> result = new PriorityQueue<>((a,b)-> a.getValue().compareTo(b.getValue()));
-        result.addAll(countDna.entrySet());
+        List<Map.Entry<Dna, Integer>> result = new ArrayList<>(countDna.entrySet());
 
-        return result.stream().limit(howMany).collect(Collectors.toList());
+        return result.stream()
+                .sorted((a,b)->b.getValue().compareTo(a.getValue()))
+                .limit(howMany)
+                .collect(Collectors.toList());
+    }
+
+    public int getID(){
+        return ID;
     }
 
     public Map<String,String> getStatistics() {
@@ -103,6 +123,10 @@ public abstract class DayStatistics {
         data.put("Avg Number of Child: ",String.format("%.2f", getAverageNumberOfChildren()));
         data.put("Top Dna: ",getTopDna(3).toString());
         return data;
+    }
+
+    public int getCurrentDay(){
+        return currentDay;
     }
 
 }

@@ -1,18 +1,15 @@
-package agh.ics.oop;
+package agh.ics.oop.Simulation;
 
 import agh.ics.oop.Models.Maps.MainMap;
-import agh.ics.oop.Models.Utils.Boundary;
+import agh.ics.oop.Models.Maps.WorldMap;
 import agh.ics.oop.Models.Utils.DayStatisticsExport;
-import agh.ics.oop.Models.Utils.MapSettings;
 
 import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 
 public class Simulation implements Runnable {
     private final Object lock = new Object();
 
-    private MainMap map;
+    private final WorldMap map;
     private boolean running = true;
     private DayStatisticsExport saveToFile = null;
 
@@ -61,7 +58,4 @@ public class Simulation implements Runnable {
             lock.notifyAll();
         }
     }
-
-    //run
-    //runDay
 }

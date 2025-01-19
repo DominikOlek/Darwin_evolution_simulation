@@ -1,10 +1,9 @@
 package agh.ics.oop.Models.Utils;
 
-import agh.ics.oop.Models.Maps.MainMap;
+import agh.ics.oop.Models.Maps.WorldMap;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +27,7 @@ public class DayStatisticsExport {
                 .collect(Collectors.joining(";"));
     }
 
-    public void toCsv(MainMap map) throws IOException {
+    public void toCsv(WorldMap map) throws IOException {
         synchronized (this) {
             List<String[]> dataLines = new ArrayList<>();
 

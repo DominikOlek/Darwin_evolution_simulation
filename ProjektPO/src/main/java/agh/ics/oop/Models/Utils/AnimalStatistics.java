@@ -1,14 +1,14 @@
 package agh.ics.oop.Models.Utils;
 
 import agh.ics.oop.Models.Enums.ChangeType;
-import agh.ics.oop.Models.Sprite.Animal;
+import agh.ics.oop.Models.Sprite.StatisticalObject;
 import agh.ics.oop.UI.SimulationPresenter;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AnimalStatistics implements Observer {
+public class AnimalStatistics implements Observer, StatisticReport {
     List<Integer> dna;
     int activeGen;
     int energy;
@@ -25,7 +25,7 @@ public class AnimalStatistics implements Observer {
     }
 
     @Override
-    public void update(Animal animal, ChangeType changeType) {
+    public void update(StatisticalObject animal, ChangeType changeType) {
         switch (changeType) {
             case Gen -> dna = animal.getDna().getPartToMultiplication(1,true);
             case ActiveGen -> {activeGen = animal.getDna().getActual(); position=animal.getPosition();energy=animal.getEnergy();age = animal.getCurrentDay();}
@@ -37,7 +37,7 @@ public class AnimalStatistics implements Observer {
         presenter.getAnimalStat();
     }
 
-    public Map<String,String> getData(){
+    public Map<String,String> getStatistics(){
         Map<String,String> data=new HashMap<>();
         data.put("ActiveGen: ",Integer.toString(activeGen));
         if (dead== 0) data.put("Age: ",Integer.toString(age));

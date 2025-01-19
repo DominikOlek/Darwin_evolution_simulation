@@ -7,7 +7,7 @@ import agh.ics.oop.UI.WorldElementBox;
 public class Grass implements MapObject{
     private final Vector2D position;
     private final int energyValue;
-    private WorldElementBox graph;
+    private final WorldElementBox graph;
 
     public Grass(Vector2D position, int energyValue) {
         this.position = position;
