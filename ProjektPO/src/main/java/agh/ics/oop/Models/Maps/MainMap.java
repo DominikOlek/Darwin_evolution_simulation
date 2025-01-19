@@ -17,6 +17,11 @@ public class MainMap extends DayStatistics {
     private final Map<Vector2D, Grass> grasses = new HashMap<Vector2D, Grass>();
     private final List<MapObserver> observers = new ArrayList<MapObserver>();
 
+    // Przechowują współrzędne wolnych (bez roślin) pól w równiku i poza nim
+    private final Set<Vector2D> equatorFreeFields = new HashSet<>();
+    private final Set<Vector2D> outsideFreeFields = new HashSet<>();
+
+
     private int currentDay =0;
 
     private final int startGrassNumber;
@@ -39,6 +44,9 @@ public class MainMap extends DayStatistics {
     private boolean run = true;
     private boolean isSwap = false;
 
+    private int minEquatorY;
+    private int maxEquatorY;
+
     //MapSettings - wszystkie opcje jakie będą ustawiane
     public MainMap(Boundary size, MapSettings settings) {
         this.startGrassNumber = settings.startGrassNumber();
@@ -57,10 +65,13 @@ public class MainMap extends DayStatistics {
         this.minMutation = settings.minMutation();
         this.maxMutation = settings.maxMutation();
         this.isSwap = settings.whichMutation();
+
+        initFreeFields();
         generateStartAnimal();
         setSurface(size);
         setStartEnergy(howMany,startEnergy);
         growGrass(settings.startGrassNumber());
+
 
 
         ID = GenerateID.GetID();
@@ -198,6 +209,11 @@ public class MainMap extends DayStatistics {
         }
     }
 
+    private boolean isEquatorPos(Vector2D pos) {
+        return pos.getY() >= minEquatorY && pos.getY() <= maxEquatorY;
+    }
+
+
     //wykonanie cyklu dla każdego pola, sprawdzenie czy można zjeść i się rozmnożyć
     private void cycleEatMulti(){
         for(Map.Entry<Vector2D, Set<Animal>> animal : animals.entrySet()) {
@@ -209,6 +225,11 @@ public class MainMap extends DayStatistics {
                 strongest.getFirst().eat(energyFromEat);
                 grasses.remove(animal.getKey());
                 oneEat(energyFromEat);
+                if (isEquatorPos(animal.getKey())) {
+                    equatorFreeFields.add(animal.getKey());
+                } else {
+                    outsideFreeFields.add(animal.getKey());
+                }
             }
 
             if(strongest.size()> 1 && strongest.getLast().getEnergy() >= energyToAdult){
@@ -260,38 +281,6 @@ public class MainMap extends DayStatistics {
         }
     }
 
-    private Vector2D randomEquatorPosition() {
-        int width = size.upperRight().getX() + 1;
-        int minY = Math.max(size.lowerLeft().getY(), equator - equatorHeight/2);
-        int maxY = Math.min(size.upperRight().getY(), equator + equatorHeight/2);
-
-        int randX = (int) (Math.random() * width); // od 0 do width - 1
-        int randY = minY + (int) (Math.random() * (maxY - minY + 1)); // [minY...maxY]
-
-        return new Vector2D(randX, randY);
-    }
-
-    private Vector2D randomOutsideEquatorPosition() {
-        int width = size.upperRight().getX() + 1;
-        int height = size.upperRight().getY() + 1;
-
-        int minEquatorY = Math.max(size.lowerLeft().getY(), equator - equatorHeight/2);
-        int maxEquatorY = Math.min(size.upperRight().getY(), equator + equatorHeight/2);
-
-        while (true) {
-            int randX = (int) (Math.random() * width);
-            int randY = (int) (Math.random() * height);
-
-
-            if (randY >= minEquatorY && randY <= maxEquatorY) {
-                continue;
-            }
-            return new Vector2D(randX, randY);
-        }
-    }
-
-
-
     //AnimalsAt
     public Set<Animal> getAnimalsAt(Vector2D pos) {
         return animals.get(pos);
@@ -320,26 +309,67 @@ public class MainMap extends DayStatistics {
         return run;
     }
 
-    public void growGrass(int howMany){
-        //int toGood = howMany/5;
-        //generowanie (pas 0-(sr-szer/2) i (sr+szer/2) - 20% a równik (sr+-szer) - 80%)
+    private void initFreeFields() {
+        int width = size.upperRight().getX() + 1;
+        int height = size.upperRight().getY() + 1;
+
+        this.minEquatorY = Math.max(size.lowerLeft().getY(), equator - equatorHeight/2);
+        this.maxEquatorY = Math.min(size.upperRight().getY(), equator + equatorHeight/2);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Vector2D pos = new Vector2D(x,y);
+
+                if (y >= minEquatorY && y <= maxEquatorY) {
+                    equatorFreeFields.add(pos);
+                } else {
+                    outsideFreeFields.add(pos);
+                }
+            }
+        }
+    }
+
+    private void placeGrassInSet(Set<Vector2D> freeSet) {
+        List<Vector2D> temp = new ArrayList<>(freeSet);
+        int randIndex = (int) (Math.random() * temp.size());
+        Vector2D chosenPos = temp.get(randIndex);
+
+        grasses.put(chosenPos, new Grass(chosenPos, energyFromEat));
+        changeGrass(1);
+
+        freeSet.remove(chosenPos);
+    }
+
+
+    public void growGrass(int dailyGrassCount) {
+        // rosliny zasadzone danego dnia
         int planted = 0;
 
-        while (planted < howMany && getNumbersOfGrass() < numbersOfPlaces) {
-            // czy trawa będzie na równiku
-            double rand = Math.random(); // [0..1)
-            Vector2D pos;
-            if (rand < 0.8) {
-                pos = randomEquatorPosition();
-            } else {
-                pos = randomOutsideEquatorPosition();
-            }
+        while (planted < dailyGrassCount && (!equatorFreeFields.isEmpty() || !outsideFreeFields.isEmpty())) {
 
-            if (!isGrassAt(pos)) {
-                grasses.put(pos, new Grass(pos, energyFromEat));
-                planted++;
-                changeGrass(1);
+            double rand = Math.random();
+            boolean wantEquator = (rand < 0.8);
+
+            if (wantEquator) {
+                if (equatorFreeFields.isEmpty()) {
+                    if (outsideFreeFields.isEmpty()) {
+                        break;
+                    }
+                    placeGrassInSet(outsideFreeFields);
+                } else {
+                    placeGrassInSet(equatorFreeFields);
+                }
+            } else {
+                if (outsideFreeFields.isEmpty()) {
+                    if (equatorFreeFields.isEmpty()) {
+                        break;
+                    }
+                    placeGrassInSet(equatorFreeFields);
+                } else {
+                    placeGrassInSet(outsideFreeFields);
+                }
             }
+            planted++;
         }
     }
 
