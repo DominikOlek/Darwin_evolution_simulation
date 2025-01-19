@@ -4,10 +4,7 @@ import agh.ics.oop.Models.Maps.MainMap;
 import agh.ics.oop.Models.Maps.WorldMapI;
 import agh.ics.oop.Models.Sprite.LiveObject;
 import agh.ics.oop.Models.Sprite.MapObject;
-import agh.ics.oop.Models.Utils.AnimalStatistics;
-import agh.ics.oop.Models.Utils.Boundary;
-import agh.ics.oop.Models.Utils.MapObserver;
-import agh.ics.oop.Models.Utils.Vector2D;
+import agh.ics.oop.Models.Utils.*;
 import agh.ics.oop.Simulation.Simulation;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -15,15 +12,14 @@ import javafx.fxml.FXML;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.scene.text.Text;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -35,6 +31,8 @@ public class SimulationPresenter implements MapObserver {
     private static final double CELL_WIDTH = 30;
     private static final double CELL_HEIGHT = 30;
     public Button changeStateBtn;
+    private boolean dnaBtn = false;
+    private boolean grassBtn = false;
     MainMap worldMap;
     Simulation simulation;
     AnimalStatistics animalStatistics = new AnimalStatistics(this);
@@ -110,7 +108,54 @@ public class SimulationPresenter implements MapObserver {
         popup.getContent().clear();
     }
 
-    private void drawLayout(){
+    @FXML
+    protected void getBestDna(){
+        if(!dnaBtn) {
+            Dna bestDna = worldMap.getTopDna(1).getFirst().getKey();
+            Platform.runLater(() -> {
+                clearGrid();
+                drawLayout(bestDna);
+            });
+        }else {
+            Platform.runLater(() -> {
+                clearGrid();
+                drawLayout(null);
+            });
+        }
+        dnaBtn = !dnaBtn;
+    }
+
+    @FXML
+    protected void getBestGrassPlace(){
+        if(!grassBtn) {
+            Vector2D equator = worldMap.getEquator();
+
+            Platform.runLater(() -> {
+                Boundary size = worldMap.getSize();
+                int sizeX = size.upperRight().getX() - size.lowerLeft().getX();
+                int sizeY = size.upperRight().getY() - size.lowerLeft().getY();
+
+                for (int i = 1; i <= sizeX + 1; i++) {
+                    int realX = size.lowerLeft().getX() + i - 1;
+                    for (int j = equator.getX() + 1; j <= equator.getY() + 1; j++) {
+                        VBox vbox = new VBox();
+                        int realY = size.upperRight().getY() - j + 1;
+                        Vector2D pos = new Vector2D(realX, realY);
+                        vbox.setBackground(new Background(new BackgroundFill(Color.DARKGREEN, CornerRadii.EMPTY, Insets.EMPTY)));
+                        gridPane.add(vbox, i, j);
+                    }
+                }
+            });
+        }else {
+            Platform.runLater(() -> {
+                clearGrid();
+                drawLayout(null);
+            });
+        }
+        grassBtn = !grassBtn;
+    }
+
+    private void drawLayout(Dna bestDna){
         try {
             ID.setText("Mapa o ID: "+worldMap.getID() + " Dzień: "+worldMap.getCurrentDay());
             Boundary size = worldMap.getSize();
@@ -133,7 +178,7 @@ public class SimulationPresenter implements MapObserver {
                         } else {
                             Vector2D pos = new Vector2D(realX, realY);
                             Set<LiveObject> atPos = worldMap.getAnimalsAt(pos);
-                            if (atPos != null) {
+                            if (atPos != null && !atPos.isEmpty()) {
                                 LiveObject animalatPos = atPos.stream().findFirst().get();
                                 WorldElementBox box = animalatPos.getGraph();
                                 box.setLabel("" + atPos.size());
@@ -149,6 +194,15 @@ public class SimulationPresenter implements MapObserver {
                                         animal.setObserver(animalStatistics);
                                         getAnimalStat();
                                     });
+                                }
+                                if(bestDna != null) {
+                                    if(animalatPos.getDna().equals(bestDna)) {
+                                        vbox.setBackground(new Background(new BackgroundFill(Color.GOLD, CornerRadii.EMPTY, Insets.EMPTY)));
+                                    }else{
+                                        vbox.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
+                                    }
+                                }else{
+                                    vbox.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));
                                 }
                             } else {
                                 MapObject grass = worldMap.getGrassAt(pos);
@@ -216,13 +270,15 @@ public class SimulationPresenter implements MapObserver {
     public void mapChanged(WorldMapI worldMap, String message) {
         Platform.runLater(() -> {
             clearGrid();
-            drawLayout();
+            drawLayout(null);
             getMapStat();
         });
     }
 
     @FXML
     private void changeState(ActionEvent actionEvent) {
+        grassBtn=false;
+        dnaBtn=false;
         try {
             if (Objects.equals(changeStateBtn.getText(), "Pause")) {
                 simulation.pause();

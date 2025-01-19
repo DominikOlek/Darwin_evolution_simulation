@@ -12,6 +12,7 @@ public class Simulation implements Runnable {
     private final WorldMap map;
     private boolean running = true;
     private DayStatisticsExport saveToFile = null;
+    private boolean paused = false;
 
     public Simulation(MainMap map, DayStatisticsExport saveToFile) {
         this.map = map;
@@ -21,40 +22,46 @@ public class Simulation implements Runnable {
     @Override
     public void run() {
         try {
-            synchronized (lock) {
-                while (map.checkRun()) {
-                    try {
-                        while (!running) {
-                            lock.wait();
-                        }
-                        map.doDay();
-                        if (saveToFile != null) {
-                            saveToFile.toCsv(map);
-                        }
-                        Thread.sleep(50);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+            while (running && map.checkRun() && !Thread.currentThread().isInterrupted()) {
+                synchronized (lock) {
+                    while (paused) {
+                        lock.wait();
                     }
                 }
+                map.doDay();
+                if (saveToFile != null) {
+                    try {
+                        saveToFile.toCsv(map);
+                    } catch (IOException e) {
+                        System.err.println("Write to CSV error");
+                    }
+                }
+                Thread.sleep(50);
             }
         } catch (InterruptedException e) {
-            running = false;
             Thread.currentThread().interrupt();
+        } finally {
+            running = false;
         }
     }
 
     public void stop() throws InterruptedException {
+        running = false;
         Thread.currentThread().interrupt();
-        pause();
+        synchronized (lock) {
+            lock.notifyAll();
+        }
     }
 
     public void pause() throws InterruptedException {
-        running = false;
+        paused = true;
+        map.setBreak(true);
     }
 
     public void resume() throws InterruptedException {
         synchronized (lock) {
-            running = true;
+            paused = false;
+            map.setBreak(false);
             lock.notifyAll();
         }
     }

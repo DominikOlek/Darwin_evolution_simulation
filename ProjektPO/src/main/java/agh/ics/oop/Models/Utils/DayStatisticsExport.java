@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DayStatisticsExport {
+
     public String escapeSpecialCharacters(String data) {
         if (data == null) {
             throw new IllegalArgumentException("Input data cannot be null");

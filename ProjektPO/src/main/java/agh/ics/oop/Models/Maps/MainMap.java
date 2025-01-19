@@ -23,6 +23,7 @@ public class MainMap extends WorldMap {
     private final Set<Vector2D> outsideFreeFields = new HashSet<>();
     private int minEquatorY;
     private int maxEquatorY;
+    private boolean isBreak = false;
 
     //MapSettings - wszystkie opcje jakie będą ustawiane
     public MainMap(Boundary size, MapSettings settings) {
@@ -88,7 +89,10 @@ public class MainMap extends WorldMap {
                 addAnimal(toPos, animal);
                 animal.move(toPos);//wykonuje przypisanie lokalizacji i zmiany codzienne zwierzaka
                 mapChanged("Move");
-                Thread.sleep(50);
+                if(!isBreak)
+                    Thread.sleep(50);
+                else
+                    Thread.sleep(5);
             }
         }catch (Exception e){
             System.out.println();
@@ -224,7 +228,7 @@ public class MainMap extends WorldMap {
         freeSet.remove(chosenPos);
     }
 
-    public void growGrass(int dailyGrassCount) {
+    private void growGrass(int dailyGrassCount) {
         // rosliny zasadzone danego dnia
         int planted = 0;
 
@@ -261,6 +265,10 @@ public class MainMap extends WorldMap {
         Set<LiveObject> AllObj = new HashSet<>();
         for(Set<LiveObject> set:animals.values()) AllObj.addAll(set);
         return AllObj;
+    }
+
+    public Vector2D getEquator(){
+        return new Vector2D(minEquatorY,maxEquatorY);
     }
 
 
@@ -304,9 +312,15 @@ public class MainMap extends WorldMap {
         observers.add(observer);
     }
 
+
     @Override
     public void removeObserver(MapObserver observer) {
         observers.remove(observer);
+    }
+
+    @Override
+    public void setBreak(boolean isBreak) {
+        this.isBreak = isBreak;
     }
 
     //AnimalsAt

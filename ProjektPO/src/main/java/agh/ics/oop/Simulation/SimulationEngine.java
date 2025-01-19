@@ -28,6 +28,7 @@ public class SimulationEngine {
             }
         }catch (InterruptedException e) {
             System.out.print("Interrupted w await" +e.getMessage());
+            e.printStackTrace();
         }
     }
 }

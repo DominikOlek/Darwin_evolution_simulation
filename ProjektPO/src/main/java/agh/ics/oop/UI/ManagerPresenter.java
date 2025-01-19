@@ -29,6 +29,8 @@ public class ManagerPresenter extends StartSimulation {
     private static final double CELL_WIDTH = 30;
     private static final double CELL_HEIGHT = 30;
     WorldMapI worldMap;
+    private SettingsSaver jsonSaver = new SettingsSaver(this);
+    private Stage stage;
 
     public void setWorldMap(WorldMapI worldMap) {
         this.worldMap = worldMap;
@@ -37,7 +39,7 @@ public class ManagerPresenter extends StartSimulation {
     public void setPrimaryStage(Stage primaryStage) {
         primaryStage.setOnCloseRequest(this::handleCloseRequest);
         primaryStage.setTitle("Manager");
-
+        stage = primaryStage;
     }
 
     private void handleCloseRequest(WindowEvent event) {
@@ -117,10 +119,7 @@ public class ManagerPresenter extends StartSimulation {
                 label.setText(String.valueOf(newVal.intValue())));
     }
 
-    @FXML
-    public void handleSubmit() {
-        int width = (int) widthSlider.getValue();
-        int height = (int) heightSlider.getValue();
+    public MapSettings getMapSettings() {
         int lenGen = (int) lenGenSlider.getValue();
         int startAnimals = (int) startAnimalSlider.getValue();
         int energyFromEat = (int) energyFromEatSlider.getValue();
@@ -132,15 +131,52 @@ public class ManagerPresenter extends StartSimulation {
         int multiEnergy = (int) multiEnergySlider.getValue();
         int adultEnergy = (int) adultEnergySlider.getValue();
 
-        if (minMutation > maxMutation) {
-            resultLabel.setText("Błąd: Minimalna długość musi być mniejsze niż maksymalna długość!");
-        } else {
-            Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(width,height));
-            MapSettings settings = new MapSettings(whichMutation.isSelected(), lenGen, energyFromEat, adultEnergy, multiEnergy, startGrass, startAnimals ,growGrass, startEnergy, minMutation, maxMutation,whichGrow.isSelected(),save.isSelected());
-            resultLabel.setText("Utworzono");
+        return new MapSettings(whichMutation.isSelected(), lenGen, energyFromEat, adultEnergy, multiEnergy, startGrass, startAnimals ,growGrass, startEnergy, minMutation, maxMutation,whichGrow.isSelected(),save.isSelected());
+    }
 
-            onSimulationStartClicked(size,settings);
-        }
+    public void applySettings(MapSettings settings,Vector2D size) {
+        widthSlider.setValue(size.getX());
+        heightSlider.setValue(size.getY());
+        startAnimalSlider.setValue(settings.startAnimalNumber());
+        lenGenSlider.setValue(settings.lenGen());
+        energyFromEatSlider.setValue(settings.energyFromEat());
+        minMutationSlider.setValue(settings.minMutation());
+        maxMutationSlider.setValue(settings.maxMutation());
+        startGrassSlider.setValue(settings.startGrassNumber());
+        growGrassSlider.setValue(settings.numberOfGrowing());
+        startEnergySlider.setValue(settings.startEnergy());
+        multiEnergySlider.setValue(settings.energyForMulti());
+        adultEnergySlider.setValue(settings.energyToAdult());
+        whichMutation.setSelected(settings.whichMutation());
+        whichGrow.setSelected(settings.whichGrass());
+        save.setSelected(settings.saveToFile());
+    }
+
+    @FXML void onLoadClick(ActionEvent event) {
+        jsonSaver.loadSettingsFromFile(stage);
+
+    }
+
+    @FXML void onSaveClick(ActionEvent event) {
+        MapSettings set = getMapSettings();
+        int width = (int) widthSlider.getValue();
+        int height = (int) heightSlider.getValue();
+        Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(width,height));
+        jsonSaver.saveSettingsToFile(set,size.upperRight(),stage);
+
+    }
+
+    @FXML
+    public void handleSubmit() {
+        MapSettings set = getMapSettings();
+
+        int width = (int) widthSlider.getValue();
+        int height = (int) heightSlider.getValue();
+        Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(width,height));
+
+        resultLabel.setText("Utworzono");
+
+        onSimulationStartClicked(size,set);
     }
 
     public void handleToggleMutation(ActionEvent actionEvent) {

@@ -27,6 +27,8 @@
                 <Label text="Dane zwierzaka"/>
                 <GridPane fx:id="animalStat" alignment="CENTER" >
                 </GridPane>
+                <Pane VBox.vgrow="ALWAYS" />
+                <Button  prefHeight="37.0" prefWidth="79.0" onAction="#getBestGrassPlace" text="Show Popular Grass Places" maxWidth="Infinity" />
             </VBox>
 
             <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity">
@@ -35,6 +37,8 @@
                 </GridPane>
                 <Pane VBox.vgrow="ALWAYS" />
                 <Button fx:id="changeStateBtn"  prefHeight="37.0" prefWidth="79.0" onAction="#changeState" text="Pause" maxWidth="Infinity" />
+                <Pane VBox.vgrow="ALWAYS" />
+                <Button  prefHeight="37.0" prefWidth="79.0" onAction="#getBestDna" text="Show Popular Genotype" maxWidth="Infinity" />
             </VBox>
         </HBox>
     </bottom>

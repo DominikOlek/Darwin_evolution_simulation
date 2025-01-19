@@ -41,7 +41,7 @@ public class AnimalStatistics implements Observer, StatisticReport {
         Map<String,String> data=new HashMap<>();
         data.put("ActiveGen: ",Integer.toString(activeGen));
         if (dead== 0) data.put("Age: ",Integer.toString(age));
-        else data.put("Day of dead: ",Integer.toString(dead));
+        else data.put("Age of dead: ",Integer.toString(dead));
         data.put("Energy: ",Integer.toString(energy));
         data.put("Number of child: ",Integer.toString(childNr));
         data.put("Number of descendant: ",Integer.toString(allChild));

@@ -1,10 +1,7 @@
 package agh.ics.oop.Models.Maps;
 
 import agh.ics.oop.Models.Sprite.StatisticalObject;
-import agh.ics.oop.Models.Utils.Boundary;
-import agh.ics.oop.Models.Utils.Dna;
-import agh.ics.oop.Models.Utils.GenerateID;
-import agh.ics.oop.Models.Utils.StatisticReport;
+import agh.ics.oop.Models.Utils.*;
 
 import java.util.*;
 import java.util.stream.Collectors;

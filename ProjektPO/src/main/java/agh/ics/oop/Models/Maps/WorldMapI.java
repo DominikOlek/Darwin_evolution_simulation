@@ -32,4 +32,8 @@ public interface WorldMapI {
     boolean checkRun();
 
     Boundary getSize();
+
+    Vector2D getEquator();
+
+    void setBreak(boolean isBreak);
 }
