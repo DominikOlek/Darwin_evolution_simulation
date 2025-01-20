@@ -25,7 +25,7 @@ public class Grass implements MapObject{
         return position;
     }
 
-    public int getEnergyValue() {
+    public int getEnergy() {
         return energyValue;
     }
 

@@ -1,5 +1,6 @@
 package agh.ics.oop.UI;
 
+import agh.ics.oop.Models.Enums.FileNames;
 import agh.ics.oop.Models.Maps.MainMap;
 import agh.ics.oop.Models.Maps.WorldMapI;
 import agh.ics.oop.Models.Sprite.LiveObject;
@@ -207,7 +208,12 @@ public class SimulationPresenter implements MapObserver {
                             } else {
                                 MapObject grass = worldMap.getGrassAt(pos);
                                 if (grass != null) {
-                                    vbox = grass.getGraph().get();
+                                    if (gridPane.getChildren().contains(grass.getGraph().get()) && grass.getFileName() == FileNames.Lgrass){
+                                        WorldElementBox temp = new WorldElementBox(grass);
+                                        vbox = temp.get();
+                                    }else {
+                                        vbox = grass.getGraph().get();
+                                    }
                                 } else {
                                     lab = new Label("");
                                 }

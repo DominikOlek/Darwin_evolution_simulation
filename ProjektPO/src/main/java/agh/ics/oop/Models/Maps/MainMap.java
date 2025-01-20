@@ -181,11 +181,11 @@ public class MainMap extends WorldMap {
                 // Pobieramy roślinę
                 MapObject roslina = grasses.get(pos);
                 if (roslina instanceof Grass grassObj) {
-                    strongest.getFirst().eat(grassObj.getEnergyValue());
+                    strongest.getFirst().eat(roslina.getEnergy());
 
                     removeGrass(grassObj, pos);
 
-                    oneEat(grassObj.getEnergyValue());
+                    oneEat(roslina.getEnergy());
 
                     // Dodanie pola do wolnych
                     if (isEquatorPos(pos)) equatorFreeFields.add(pos);

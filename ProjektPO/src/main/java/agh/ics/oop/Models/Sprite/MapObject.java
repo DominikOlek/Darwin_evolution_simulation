@@ -9,4 +9,5 @@ public interface MapObject{
     String toString();
     FileNames getFileName();
     WorldElementBox getGraph();
+    int getEnergy();
 }
