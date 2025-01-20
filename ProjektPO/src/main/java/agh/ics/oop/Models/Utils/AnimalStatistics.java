@@ -1,6 +1,7 @@
 package agh.ics.oop.Models.Utils;
 
 import agh.ics.oop.Models.Enums.ChangeType;
+import agh.ics.oop.Models.Enums.MapDirection;
 import agh.ics.oop.Models.Sprite.StatisticalObject;
 import agh.ics.oop.UI.SimulationPresenter;
 
@@ -18,6 +19,7 @@ public class AnimalStatistics implements Observer, StatisticReport {
     int age;
     int dead=0;
     Vector2D position= new Vector2D(0,0);
+    MapDirection direction = MapDirection.NORTH;
     SimulationPresenter presenter;
 
     public AnimalStatistics(SimulationPresenter presenter) {
@@ -28,7 +30,7 @@ public class AnimalStatistics implements Observer, StatisticReport {
     public void update(StatisticalObject animal, ChangeType changeType) {
         switch (changeType) {
             case Gen -> dna = animal.getDna().getPartToMultiplication(1,true);
-            case ActiveGen -> {activeGen = animal.getDna().getActual(); position=animal.getPosition();energy=animal.getEnergy();age = animal.getCurrentDay();}
+            case ActiveGen -> {activeGen = animal.getDna().getActual(); direction=animal.getDirection();position=animal.getPosition();energy=animal.getEnergy();age = animal.getCurrentDay();}
             case Eat -> {eat = animal.getHowManyEaten(); energy=animal.getEnergy();}
             case Dead -> {dead=animal.getCurrentDay(); age=0;}
             case Child -> {childNr=animal.getNumberOfChild();energy=animal.getEnergy();}
@@ -47,6 +49,7 @@ public class AnimalStatistics implements Observer, StatisticReport {
         data.put("Number of descendant: ",Integer.toString(allChild));
         data.put("Number of eat: ",Integer.toString(eat));
         data.put("Position: ",position.toString());
+        data.put("Direction: ",direction.toString());
         data.put("Genotype: ",dna.toString());
         return data;
     }

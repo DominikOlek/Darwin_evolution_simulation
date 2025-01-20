@@ -24,7 +24,7 @@
     <bottom>
         <HBox spacing="10.0" >
             <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity" minWidth="540">
-                <Label text="Dane zwierzaka"/>
+                <Label text="Animal data"/>
                 <GridPane fx:id="animalStat" alignment="CENTER" >
                 </GridPane>
                 <Pane VBox.vgrow="ALWAYS" />
@@ -32,7 +32,7 @@
             </VBox>
 
             <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity">
-                <Label text="Dane mapy"/>
+                <Label text="Map data"/>
                 <GridPane fx:id="dayStat" alignment="CENTER" >
                 </GridPane>
                 <Pane VBox.vgrow="ALWAYS" />

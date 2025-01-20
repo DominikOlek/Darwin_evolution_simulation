@@ -180,11 +180,11 @@ public class ManagerPresenter extends StartSimulation {
     }
 
     public void handleToggleMutation(ActionEvent actionEvent) {
-        whichMutation.setText(!whichMutation.isSelected() ? "Normal" : "Swap");
+        whichMutation.setText(!whichMutation.isSelected() ? "Complete randomness" : "Swap");
     }
 
     public void handleToggleGrow(ActionEvent actionEvent) {
-        whichGrow.setText(!whichGrow.isSelected() ? "Normal" : "Big grass");
+        whichGrow.setText(!whichGrow.isSelected() ? "Forested equator" : "A bountiful harvest");
     }
 
     public void handleToggleSave(ActionEvent actionEvent) {

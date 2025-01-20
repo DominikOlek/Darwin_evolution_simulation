@@ -25,6 +25,7 @@ public class MainMap extends WorldMap {
     private int minEquatorY;
     private int maxEquatorY;
     private boolean isBreak = false;
+    private final static int increaseEnergy = 2;
 
     //MapSettings - wszystkie opcje jakie będą ustawiane
     public MainMap(Boundary size, MapSettings settings) {
@@ -318,7 +319,7 @@ private boolean placeBig(Vector2D chosen, Set<Vector2D> freeSet) {
         return false;
     }
 
-    Grass big = new Grass(chosen, settings.energyFromEat() * 2, true);
+    Grass big = new Grass(chosen, settings.energyFromEat() * increaseEnergy, true);
 
     // 4 klucze w mapie 'grasses' wskazują TEN SAM obiekt
     grasses.put(chosen, big);

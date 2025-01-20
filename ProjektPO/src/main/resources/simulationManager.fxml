@@ -67,8 +67,11 @@
                     <Slider fx:id="maxMutationSlider" min="0" max="50" value="20"/>
                     <Label fx:id="maxMutationLabel" text="20"/>
                 </VBox>
+
                 <Pane VBox.vgrow="ALWAYS" />
                 <Button text="Save Options" onAction="#onSaveClick" maxWidth="Infinity"/>
+                <Pane VBox.vgrow="ALWAYS" />
+                <Button text="Get Options" onAction="#onLoadClick" maxWidth="Infinity"/>
                 </children>
             </VBox>
             <VBox HBox.hgrow="ALWAYS">
@@ -87,7 +90,7 @@
 
                 <VBox spacing="5">
                     <Label text="Which Mutation:" />
-                    <ToggleButton fx:id="whichMutation" text="Normal" onAction="#handleToggleMutation"/>
+                    <ToggleButton fx:id="whichMutation" text="Complete randomness" onAction="#handleToggleMutation"/>
                 </VBox>
 
 
@@ -113,7 +116,7 @@
 
                 <VBox spacing="5">
                     <Label text="Which Grow:" />
-                    <ToggleButton fx:id="whichGrow" text="Normal" onAction="#handleToggleGrow"/>
+                    <ToggleButton fx:id="whichGrow" text="Forested equator" onAction="#handleToggleGrow"/>
                 </VBox>
 
                 <VBox spacing="5">
@@ -122,10 +125,8 @@
                 </VBox>
 
                 <Pane VBox.vgrow="ALWAYS" />
-                <Button text="Zatwierdź" onAction="#handleSubmit" maxWidth="Infinity"/>
+                <Button text="Start World" onAction="#handleSubmit" maxWidth="Infinity"/>
 
-                <Pane VBox.vgrow="ALWAYS" />
-                <Button text="Get Options" onAction="#onLoadClick" maxWidth="Infinity"/>
                 <Label fx:id="resultLabel" text="" maxWidth="Infinity"/>
                 </children>
             </VBox>
