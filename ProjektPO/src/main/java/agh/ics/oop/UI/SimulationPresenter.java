@@ -88,7 +88,7 @@ public class SimulationPresenter implements MapObserver {
 
     public void setWorldMap(MainMap worldMap) {
         this.worldMap = worldMap;
-        ID.setText("Mapa o ID: "+worldMap.getID() + " Dzień: "+worldMap.getCurrentDay());
+        ID.setText("Map ID: "+worldMap.getID() + " Day: "+worldMap.getCurrentDay());
     }
     public void setSimulation(Simulation simulation) {this.simulation = simulation;}
     @FXML
@@ -158,7 +158,7 @@ public class SimulationPresenter implements MapObserver {
 
     private void drawLayout(Dna bestDna){
         try {
-            ID.setText("Mapa o ID: "+worldMap.getID() + " Dzień: "+worldMap.getCurrentDay());
+            ID.setText("Map ID: "+worldMap.getID() + " Day: "+worldMap.getCurrentDay());
             Boundary size = worldMap.getSize();
             int sizeX = size.upperRight().getX() - size.lowerLeft().getX();
             int sizeY = size.upperRight().getY() - size.lowerLeft().getY();

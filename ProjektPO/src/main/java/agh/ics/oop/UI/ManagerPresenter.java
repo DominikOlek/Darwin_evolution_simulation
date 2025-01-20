@@ -174,8 +174,6 @@ public class ManagerPresenter extends StartSimulation {
         int height = (int) heightSlider.getValue();
         Boundary size = new Boundary(new Vector2D(0,0),new Vector2D(width,height));
 
-        resultLabel.setText("Utworzono");
-
         onSimulationStartClicked(size,set);
     }
 
