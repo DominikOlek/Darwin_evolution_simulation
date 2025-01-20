@@ -21,6 +21,7 @@ public class MainMap extends WorldMap {
     private boolean run = true;
     private final Set<Vector2D> equatorFreeFields = new HashSet<>();
     private final Set<Vector2D> outsideFreeFields = new HashSet<>();
+    private final Set<Vector2D> giantAreaFreeFields = new HashSet<>();
     private int minEquatorY;
     private int maxEquatorY;
     private boolean isBreak = false;
@@ -124,25 +125,76 @@ public class MainMap extends WorldMap {
         }
     }
 
-    //wykonanie cyklu dla każdego pola, sprawdzenie czy można zjeść i się rozmnożyć
-    private void cycleEatMulti(){
-        for(Map.Entry<Vector2D, Set<LiveObject>> animal : animals.entrySet()) {
-            if(animal.getValue().size() == 1 && !isGrassAt(animal.getKey())) {
+    private void removeFromAllSets(Vector2D... positions) {
+        for (Vector2D p : positions) {
+            equatorFreeFields.remove(p);
+            outsideFreeFields.remove(p);
+            giantAreaFreeFields.remove(p);
+        }
+    }
+
+    private void addToSets(Vector2D pos) {
+        if (isEquatorPos(pos)) equatorFreeFields.add(pos);
+        else outsideFreeFields.add(pos);
+
+        if (isInGiantArea(pos)) giantAreaFreeFields.add(pos);
+    }
+
+
+    private void removeGrass(Grass grass, Vector2D pos) {
+        grasses.remove(pos);
+        changeGrass(-1);
+
+        if (grass.isBig()) {
+            // Pętla, żeby usunąć 4 pola
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    Vector2D check = new Vector2D(pos.getX()+dx, pos.getY()+dy);
+                    if (grasses.get(check) == grass) {
+                        grasses.remove(check);
+                        addToSets(check);
+                    }
+                }
+            }
+        } else {
+            addToSets(pos);
+        }
+    }
+
+
+
+    private void cycleEatMulti() {
+        // Dla każdego pola
+        for(Map.Entry<Vector2D, Set<LiveObject>> entry : animals.entrySet()) {
+            Vector2D pos = entry.getKey();
+            Set<LiveObject> animalSet = entry.getValue();
+
+            if (animalSet.size() == 1 && !isGrassAt(pos)) {
+                // jeśli jest tylko 1 zwierzak i brak rośliny, nie ma co jeść/rozmnażać
                 continue;
             }
-            List<LiveObject> strongest = getTwoStrongest(animal.getKey());
-            if(isGrassAt(animal.getKey())){
-                strongest.getFirst().eat(settings.energyFromEat());
-                grasses.remove(animal.getKey());
-                oneEat(settings.energyFromEat());
-                if (isEquatorPos(animal.getKey())) {
-                    equatorFreeFields.add(animal.getKey());
-                } else {
-                    outsideFreeFields.add(animal.getKey());
+
+            // Bierzemy 2 najsilniejsze z getTwoStrongest(...)
+            List<LiveObject> strongest = getTwoStrongest(pos);
+
+            if (isGrassAt(pos)) {
+                // Pobieramy roślinę
+                MapObject roslina = grasses.get(pos);
+                if (roslina instanceof Grass grassObj) {
+                    strongest.getFirst().eat(grassObj.getEnergyValue());
+
+                    removeGrass(grassObj, pos);
+
+                    oneEat(grassObj.getEnergyValue());
+
+                    // Dodanie pola do wolnych
+                    if (isEquatorPos(pos)) equatorFreeFields.add(pos);
+                    else outsideFreeFields.add(pos);
                 }
             }
 
-            if(strongest.size()> 1 && strongest.getLast().getEnergy() >= settings.energyToAdult()){
+            // Rozmnażanie
+            if (strongest.size() > 1 && strongest.getLast().getEnergy() >= settings.energyToAdult()) {
                 multipl(strongest);
             }
         }
@@ -204,11 +256,22 @@ public class MainMap extends WorldMap {
             for (int y = 0; y < height; y++) {
                 Vector2D pos = new Vector2D(x,y);
 
-                if (y >= minEquatorY && y <= maxEquatorY) {
-                    equatorFreeFields.add(pos);
-                } else {
-                    outsideFreeFields.add(pos);
-                }
+                if (y >= minEquatorY && y <= maxEquatorY) equatorFreeFields.add(pos);
+                else outsideFreeFields.add(pos);
+            }
+        }
+
+        int giantWidth = (int) (width * 0.2);
+        int giantHeight = (int) (height * 0.2);
+
+        // Losujemy lewy-górny róg kwadratu (żeby dało się zmieścić giantWidth × giantHeight)
+        int startX = (int) (Math.random() * (width - giantWidth + 1));
+        int startY = (int) (Math.random() * (height - giantHeight + 1));
+
+        for (int gx = startX; gx < startX + giantWidth; gx++) {
+            for (int gy = startY; gy < startY + giantHeight; gy++) {
+                Vector2D pos = new Vector2D(gx, gy);
+                giantAreaFreeFields.add(pos);
             }
         }
     }
@@ -217,16 +280,57 @@ public class MainMap extends WorldMap {
         return pos.getY() >= minEquatorY && pos.getY() <= maxEquatorY;
     }
 
-    private void placeGrassInSet(Set<Vector2D> freeSet) {
-        List<Vector2D> temp = new ArrayList<>(freeSet);
-        int randIndex = (int) (Math.random() * temp.size());
-        Vector2D chosenPos = temp.get(randIndex);
+    private boolean isInGiantArea(Vector2D pos) {
+        return giantAreaFreeFields != null && giantAreaFreeFields.contains(pos);
+    }
 
-        grasses.put(chosenPos, new Grass(chosenPos, settings.energyFromEat()));
+private boolean placeGrass(boolean isBig, Set<Vector2D> freeSet) {
+    if (freeSet.isEmpty()) return false; // brak pól = nie sadzimy
+
+    // Losujemy pole z freeSet
+    List<Vector2D> temp = new ArrayList<>(freeSet);
+    Vector2D chosen = temp.get((int) (Math.random() * temp.size()));
+
+    if (!isBig) {
+        Grass small = new Grass(chosen, settings.energyFromEat(), false);
+        grasses.put(chosen, small);
         changeGrass(1);
 
-        freeSet.remove(chosenPos);
+        removeFromAllSets(chosen);
+        return true;
+
+    } else {
+        return placeBig(chosen, freeSet);
     }
+}
+
+private boolean placeBig(Vector2D chosen, Set<Vector2D> freeSet) {
+    int x = chosen.getX();
+    int y = chosen.getY();
+
+    Vector2D p1 = new Vector2D(x+1,y);
+    Vector2D p2 = new Vector2D(x,y+1);
+    Vector2D p3 = new Vector2D(x+1,y+1);
+
+    // sprawdzamy, czy p1, p2, p3 też są w freeSet
+    if (!freeSet.contains(p1) || !freeSet.contains(p2) || !freeSet.contains(p3)) {
+        // Nie ma miejsca na 2x2
+        return false;
+    }
+
+    Grass big = new Grass(chosen, settings.energyFromEat() * 2, true);
+
+    // 4 klucze w mapie 'grasses' wskazują TEN SAM obiekt
+    grasses.put(chosen, big);
+    grasses.put(p1, big);
+    grasses.put(p2, big);
+    grasses.put(p3, big);
+
+    changeGrass(1);
+
+    removeFromAllSets(chosen, p1, p2, p3);
+    return true;
+}
 
     private void growGrass(int dailyGrassCount) {
         // rosliny zasadzone danego dnia
@@ -237,23 +341,27 @@ public class MainMap extends WorldMap {
             double rand = Math.random();
             boolean wantEquator = (rand < 0.8);
 
-            if (wantEquator) {
-                if (equatorFreeFields.isEmpty()) {
-                    if (outsideFreeFields.isEmpty()) {
-                        break;
-                    }
-                    placeGrassInSet(outsideFreeFields);
-                } else {
-                    placeGrassInSet(equatorFreeFields);
+            Set<Vector2D> chosenSet = (wantEquator) ? equatorFreeFields : outsideFreeFields;
+
+            if (chosenSet.isEmpty()) {
+                if (wantEquator && !outsideFreeFields.isEmpty()) chosenSet = outsideFreeFields;
+                else if (!wantEquator && !equatorFreeFields.isEmpty()) chosenSet = equatorFreeFields;
+                else break; // brak wolnych pól
+            }
+
+            boolean isBigPlant = false;
+            Set<Vector2D> bigSet = giantAreaFreeFields;
+            if (settings.whichGrass()) {
+                if ((planted+1) % 5 == 0 && !bigSet.isEmpty()) {
+                    isBigPlant = true;
                 }
-            } else {
-                if (outsideFreeFields.isEmpty()) {
-                    if (equatorFreeFields.isEmpty()) {
-                        break;
-                    }
-                    placeGrassInSet(equatorFreeFields);
-                } else {
-                    placeGrassInSet(outsideFreeFields);
+            }
+
+            // Sadzimy roślinę (dużą albo małą)
+            if (!placeGrass(isBigPlant, isBigPlant ? bigSet : chosenSet)) {
+                // nie posadziliśmy rośliny
+                if (isBigPlant) {
+                    placeGrass(false, chosenSet);
                 }
             }
             planted++;

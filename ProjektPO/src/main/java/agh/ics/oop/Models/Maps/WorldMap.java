@@ -68,7 +68,6 @@ public abstract class WorldMap implements StatisticReport, WorldMapI {
 
     protected void oneEat(int energy){
         this.allEnergy += energy;
-        changeGrass(-1);
     }
 
     public int getNumberOfAnimals(){

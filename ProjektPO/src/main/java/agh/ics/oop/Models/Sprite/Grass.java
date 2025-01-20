@@ -7,12 +7,18 @@ import agh.ics.oop.UI.WorldElementBox;
 public class Grass implements MapObject{
     private final Vector2D position;
     private final int energyValue;
+    private final boolean isBig;
     private final WorldElementBox graph;
 
-    public Grass(Vector2D position, int energyValue) {
+    public Grass(Vector2D position, int energyValue, boolean isBig) {
         this.position = position;
         this.energyValue = energyValue;
+        this.isBig = isBig;
         graph = new WorldElementBox(this);
+    }
+
+    public boolean isBig() {
+        return isBig;
     }
 
     public Vector2D getPosition() {
@@ -25,7 +31,11 @@ public class Grass implements MapObject{
 
     @Override
     public FileNames getFileName() {
-        return FileNames.Lgrass;
+        if (isBig) {
+            return FileNames.Lgrass;
+        } else {
+            return FileNames.Sgrass;
+        }
     }
     @Override
     public WorldElementBox getGraph() {
